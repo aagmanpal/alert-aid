@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: alert-aid-backend
+    runtime: python
+    region: singapore
+    plan: free
+    branch: main
+    rootDir: ./backend
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: "*"
+    healthCheckPath: /api/health

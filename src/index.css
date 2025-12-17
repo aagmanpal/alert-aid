@@ -1,0 +1,41 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #000000; /* Pure black for interactive starfield */
+  overflow-x: hidden;
+  overflow-y: auto; /* Allow vertical scrolling */
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Pure black (#000000) background for interactive starfield */
+html {
+  background-color: #000000;
+  overflow-x: hidden;
+  overflow-y: auto; /* Allow vertical scrolling */
+}
+
+body {
+  min-height: 100vh;
+  background-color: #000000;
+  color: #e6eef8;
+}
+
+#root {
+  min-height: 100vh;
+  background-color: transparent; /* Let starfield show through */
+}
+
+/* Ensure main app content stacks above the starfield canvas */
+.App, .app-root, #root > div {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}

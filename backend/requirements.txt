@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+pydantic
+numpy==1.24.3
+pandas
+scikit-learn==1.3.0
+requests
+python-multipart
+joblib
+python-dotenv
+aiohttp
+cachetools
+asyncio-mqtt
+sentry-sdk[fastapi]
+streamlit
+watchdog
