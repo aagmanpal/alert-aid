@@ -17,7 +17,7 @@ if os.getenv("SENTRY_DSN"):
         traces_sample_rate=1.0,
         profiles_sample_rate=1.0,
         integrations=[
-            LoggingIntegration(level=logging.INFO, event_level=logging.ERROR)
+            LoggingIntegration(level=logging.INFO, event_level=logging.INFO)
         ]
     )
 

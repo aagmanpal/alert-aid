@@ -11,8 +11,8 @@ Sentry.init({
   release: "alert-aid-frontend@1.0.0",
   environment: "production",
   integrations: [
-    // send console.log, console.warn, and console.error calls as logs to Sentry
-    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
+    // Sentry Logs Integration (New) - Captures console logs as Sentry Logs
+    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error", "info", "debug"] }),
     Sentry.browserTracingIntegration(),
     Sentry.replayIntegration(),
     Sentry.browserProfilingIntegration(),
