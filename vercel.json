@@ -1,23 +1,21 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "build",
-  "devCommand": "npm start",
   "installCommand": "npm install",
-  "framework": "create-react-app",
   "functions": {
     "api/index.py": {
       "runtime": "python3.11",
       "maxDuration": 30
     }
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/index.py"
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
   "headers": [
