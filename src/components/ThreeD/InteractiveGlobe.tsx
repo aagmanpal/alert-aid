@@ -3,10 +3,12 @@
  * Real-time disaster risk visualization with live data integration
  */
 
-import React, { useEffect, useRef, useState } from 'react';
-import Globe from 'react-globe.gl';
+import React, { useEffect, useRef, useState, Suspense } from 'react';
 import styled from 'styled-components';
 import { useLocation } from '../../contexts/LocationContext';
+
+// Lazy load the Globe component to prevent SSR issues
+const Globe = React.lazy(() => import('react-globe.gl').then(module => ({ default: module.default })));
 
 interface RiskPoint {
   lat: number;
@@ -89,6 +91,77 @@ const PulseDot = styled.span`
   }
 `;
 
+const GlobeLoading = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background: radial-gradient(circle at center, #1e3a5f 0%, #0f1729 100%);
+  border-radius: 12px;
+  color: #3B82F6;
+  font-size: 1rem;
+  gap: 16px;
+`;
+
+const LoadingSpinner = styled.div`
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(59, 130, 246, 0.3);
+  border-top-color: #3B82F6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+
+const GlobeError = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background: radial-gradient(circle at center, #1e3a5f 0%, #0f1729 100%);
+  border-radius: 12px;
+  color: #9CA3AF;
+  font-size: 1rem;
+  gap: 12px;
+  text-align: center;
+  padding: 24px;
+`;
+
+// Error Boundary for Globe
+class GlobeErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Globe Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
 const InteractiveGlobe: React.FC<InteractiveGlobeProps> = ({ 
   alerts = [], 
   riskScore = 0,
@@ -96,9 +169,15 @@ const InteractiveGlobe: React.FC<InteractiveGlobeProps> = ({
   height = 600 
 }) => {
   const globeRef = useRef<any>(null);
+  const [isClient, setIsClient] = useState(false);
   const { currentLocation } = useLocation();
   const [riskPoints, setRiskPoints] = useState<RiskPoint[]>([]);
   const [autoRotate, setAutoRotate] = useState(true);
+
+  // Only render Globe on client side (not during SSR)
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     // Convert alerts to risk points
@@ -175,6 +254,30 @@ const InteractiveGlobe: React.FC<InteractiveGlobeProps> = ({
     }
   };
 
+  // Loading fallback
+  const loadingFallback = (
+    <GlobeLoading>
+      <LoadingSpinner />
+      <span>Loading 3D Globe...</span>
+    </GlobeLoading>
+  );
+
+  // Error fallback
+  const errorFallback = (
+    <GlobeError>
+      <span style={{ fontSize: '2rem' }}>🌍</span>
+      <span>Globe visualization unavailable</span>
+      <span style={{ fontSize: '0.875rem', opacity: 0.7 }}>
+        Risk monitoring is still active
+      </span>
+    </GlobeError>
+  );
+
+  // Don't render Globe on server side
+  if (!isClient) {
+    return <GlobeContainer>{loadingFallback}</GlobeContainer>;
+  }
+
   return (
     <GlobeContainer>
       <LiveIndicator>
@@ -191,30 +294,34 @@ const InteractiveGlobe: React.FC<InteractiveGlobeProps> = ({
         </ControlButton>
       </GlobeControls>
 
-      <Globe
-        ref={globeRef}
-        globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
-        bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-        backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
-        
-        // Risk points
-        pointsData={riskPoints}
-        pointLat={(d: any) => d.lat}
-        pointLng={(d: any) => d.lng}
-        pointAltitude={0.01}
-        pointRadius={(d: any) => d.size}
-        pointColor={(d: any) => d.color}
-        pointLabel={(d: any) => d.label}
-        
-        // Atmosphere
-        atmosphereColor="#3B82F6"
-        atmosphereAltitude={0.15}
-        
-        // Controls
-        width={width}
-        height={height}
-        enablePointerInteraction={true}
-      />
+      <GlobeErrorBoundary fallback={errorFallback}>
+        <Suspense fallback={loadingFallback}>
+          <Globe
+            ref={globeRef}
+            globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+            bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
+            backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+            
+            // Risk points
+            pointsData={riskPoints}
+            pointLat={(d: any) => d.lat}
+            pointLng={(d: any) => d.lng}
+            pointAltitude={0.01}
+            pointRadius={(d: any) => d.size}
+            pointColor={(d: any) => d.color}
+            pointLabel={(d: any) => d.label}
+            
+            // Atmosphere
+            atmosphereColor="#3B82F6"
+            atmosphereAltitude={0.15}
+            
+            // Controls
+            width={width}
+            height={height}
+            enablePointerInteraction={true}
+          />
+        </Suspense>
+      </GlobeErrorBoundary>
     </GlobeContainer>
   );
 };
