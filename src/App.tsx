@@ -15,6 +15,7 @@ import HomePage from './pages/HomePage';
 import PredictionsPage from './pages/PredictionsPage';
 import AlertsPage from './pages/AlertsPage';
 import EvacuationPage from './pages/EvacuationPage';
+import FloodForecastPage from './pages/FloodForecastPageV2';
 import VerificationDashboard from './components/Verification/VerificationDashboard';
 import EnhancedLocationPermissionModal from './components/Location/EnhancedLocationPermissionModal';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -98,6 +99,7 @@ const AppContent: React.FC = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/flood-forecast" element={<FloodForecastPage />} />
             <Route path="/predictions" element={<PredictionsPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
             <Route path="/evacuation" element={<EvacuationPage />} />

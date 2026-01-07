@@ -1,0 +1,51 @@
+{
+  "river_id": "cauvery",
+  "river_name": "Cauvery River",
+  "timestamp": "2026-01-04T18:01:36.106919",
+  "training_days": 365,
+  "data_generation": {
+    "total_samples": 365,
+    "train_samples": 285,
+    "test_samples": 72,
+    "flood_days": 97,
+    "flood_percentage": 26.575342465753426,
+    "features": [
+      "rainfall_today",
+      "rainfall_2day_sum",
+      "rainfall_3day_sum",
+      "rainfall_week_avg",
+      "rainfall_week_max",
+      "prev_river_level",
+      "level_change_rate",
+      "soil_saturation_proxy",
+      "days_since_heavy_rain"
+    ]
+  },
+  "random_forest": {
+    "accuracy": 0.9122807017543859,
+    "precision": 0.8181818181818182,
+    "recall": 0.9473684210526315,
+    "f1_score": 0.8780487804878049,
+    "roc_auc": 0.9792243767313019,
+    "feature_importance": {
+      "prev_river_level": 0.23273674019782076,
+      "rainfall_3day_sum": 0.1941586562581381,
+      "soil_saturation_proxy": 0.1794142977174312,
+      "rainfall_week_avg": 0.175593503307227,
+      "rainfall_week_max": 0.09694069869124025,
+      "rainfall_2day_sum": 0.07718905590641674,
+      "level_change_rate": 0.018692546637105838,
+      "rainfall_today": 0.017123163667561322,
+      "days_since_heavy_rain": 0.008151337617058671
+    },
+    "cv_mean": 0.9168115942028987
+  },
+  "lstm": {
+    "trained": false,
+    "reason": "TensorFlow not installed"
+  },
+  "patterns": {
+    "critical_rainfall_3d": 541.5153608247423,
+    "insight": "Floods occur when >=542mm rainfall accumulates over 3 days"
+  }
+}

@@ -62,6 +62,14 @@ except ImportError as e:
     print(f"⚠️ Advanced ML routes not available: {e}")
     ADVANCED_ML_AVAILABLE = False
 
+# Import India Rivers flood forecasting routes
+try:
+    from routes import india_rivers
+    INDIA_RIVERS_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ India Rivers routes not available: {e}")
+    INDIA_RIVERS_AVAILABLE = False
+
 # Environment variables
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "demo_key")
 USGS_EARTHQUAKE_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query"
@@ -194,6 +202,10 @@ app.include_router(external_apis.router, prefix="/api", tags=["External Data"])
 # Register advanced ML routes if available
 if ADVANCED_ML_AVAILABLE:
     app.include_router(flood_forecast.router, prefix="/api", tags=["Advanced Flood ML"])
+
+# Register India Rivers flood forecasting routes
+if INDIA_RIVERS_AVAILABLE:
+    app.include_router(india_rivers.router, tags=["India Flood Forecasting"])
 
 # Root endpoint
 @app.get("/")

@@ -18,6 +18,22 @@ import json
 from typing import Dict, List, Any, Optional
 import random
 
+# Import India rivers route
+try:
+    from routes import india_rivers
+    INDIA_RIVERS_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ India Rivers routes not available: {e}")
+    INDIA_RIVERS_AVAILABLE = False
+
+# Import Frontend API (v2) route - optimized for React frontend
+try:
+    from routes import frontend_api
+    FRONTEND_API_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Frontend API routes not available: {e}")
+    FRONTEND_API_AVAILABLE = False
+
 # Environment variables
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "1801423b3942e324ab80f5b47afe0859")
 USGS_EARTHQUAKE_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query"
@@ -30,6 +46,14 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Register India rivers routes if available
+if INDIA_RIVERS_AVAILABLE:
+    app.include_router(india_rivers.router, tags=["India Flood Forecasting"])
+
+# Register Frontend API v2 routes if available
+if FRONTEND_API_AVAILABLE:
+    app.include_router(frontend_api.router, tags=["Frontend API v2"])
 
 # CORS Configuration
 app.add_middleware(

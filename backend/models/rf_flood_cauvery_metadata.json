@@ -1,0 +1,20 @@
+{
+  "trained_at": "2026-01-04T18:01:36.691913",
+  "n_estimators": 100,
+  "max_depth": 10,
+  "train_samples": 228,
+  "test_samples": 57,
+  "test_accuracy": 0.9122807017543859,
+  "test_f1": 0.8780487804878049,
+  "feature_importance": {
+    "prev_river_level": 0.23273674019782076,
+    "rainfall_3day_sum": 0.1941586562581381,
+    "soil_saturation_proxy": 0.1794142977174312,
+    "rainfall_week_avg": 0.175593503307227,
+    "rainfall_week_max": 0.09694069869124025,
+    "rainfall_2day_sum": 0.07718905590641674,
+    "level_change_rate": 0.018692546637105838,
+    "rainfall_today": 0.017123163667561322,
+    "days_since_heavy_rain": 0.008151337617058671
+  }
+}

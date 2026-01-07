@@ -1,0 +1,9 @@
+{
+  "river_id": "cauvery",
+  "river_name": "Cauvery River",
+  "danger_level": 100.0,
+  "warning_level": 85.0,
+  "num_flood_days": 97,
+  "flood_percentage": 26.575342465753426,
+  "generated_at": "2026-01-04T18:01:36.119244"
+}

@@ -57,3 +57,8 @@ Thumbs.db
 .azure/
 .vercel
 .env*.local
+
+# Non-relevant for hackathon
+backend/backend/
+*.pdf
+package-lock.json

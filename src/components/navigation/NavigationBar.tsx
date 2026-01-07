@@ -15,7 +15,8 @@ import {
   RefreshCw,
   Menu,
   X,
-  Search
+  Search,
+  Waves
 } from 'lucide-react';
 import ManualLocationSearch from '../Location/ManualLocationSearch';
 import { 
@@ -342,6 +343,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   const navigationItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'flood-forecast', label: 'Flood Forecast', icon: Waves },
     { id: 'predictions', label: 'Predictions', icon: AlertTriangle },
     { id: 'alerts', label: 'Alerts', icon: AlertTriangle },
     { id: 'evacuation', label: 'Evacuation Routes', icon: Shield },
