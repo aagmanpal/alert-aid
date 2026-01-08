@@ -1,361 +1,822 @@
 /**
  * Service Mesh Service
- * Microservices communication, traffic management, service discovery, and observability
+ * Comprehensive service mesh management, sidecar proxy control, and traffic management
  */
 
-// Service status
-type ServiceStatus = 'healthy' | 'degraded' | 'unhealthy' | 'unknown' | 'starting' | 'stopping';
+// Mesh Type
+type MeshType = 'istio' | 'linkerd' | 'consul-connect' | 'kuma' | 'aws-app-mesh';
 
-// Load balancing algorithm
-type LoadBalancingAlgorithm = 'round_robin' | 'least_connections' | 'random' | 'weighted' | 'ip_hash' | 'consistent_hash';
+// Mesh Status
+type MeshStatus = 'active' | 'inactive' | 'degraded' | 'updating' | 'error';
 
-// Protocol type
-type ProtocolType = 'http' | 'https' | 'grpc' | 'tcp' | 'udp' | 'websocket';
+// Sidecar Status
+type SidecarStatus = 'running' | 'pending' | 'failed' | 'unknown' | 'not-injected';
 
-// Circuit breaker state
-type CircuitState = 'closed' | 'open' | 'half_open';
+// Traffic Policy
+type TrafficPolicyType = 'load-balancer' | 'circuit-breaker' | 'outlier-detection' | 'retry' | 'timeout' | 'rate-limit';
 
-// Service instance
-interface ServiceInstance {
+// mTLS Mode
+type MTLSMode = 'strict' | 'permissive' | 'disabled';
+
+// Service Mesh
+interface ServiceMesh {
   id: string;
-  serviceId: string;
-  host: string;
-  port: number;
-  status: ServiceStatus;
+  name: string;
+  description: string;
+  type: MeshType;
+  version: string;
+  status: MeshStatus;
+  configuration: MeshConfiguration;
+  controlPlane: ControlPlane;
+  dataPlane: DataPlane;
+  services: MeshService[];
+  policies: MeshPolicy[];
+  gateways: Gateway[];
+  security: MeshSecurity;
+  observability: MeshObservability;
+  trafficManagement: TrafficManagement;
+  metrics: MeshMetrics;
+  tags: string[];
   metadata: {
-    version: string;
-    zone: string;
-    region: string;
-    labels: Record<string, string>;
+    createdAt: Date;
+    createdBy: string;
+    updatedAt: Date;
+    namespace: string;
+    cluster: string;
   };
-  health: {
-    lastCheck: Date;
-    consecutiveFailures: number;
-    consecutiveSuccesses: number;
-    lastFailure?: Date;
-    lastSuccess?: Date;
-  };
-  metrics: {
-    requestCount: number;
-    errorCount: number;
-    latencyP50: number;
-    latencyP95: number;
-    latencyP99: number;
-    activeConnections: number;
-  };
-  registeredAt: Date;
-  lastHeartbeat: Date;
 }
 
-// Service definition
-interface ServiceDefinition {
+// Mesh Configuration
+interface MeshConfiguration {
+  namespace: string;
+  namespaces: NamespaceConfig[];
+  sidecarInjection: {
+    enabled: boolean;
+    autoInject: boolean;
+    namespaceSelector: Record<string, string>;
+    podSelector: Record<string, string>;
+    excludeNamespaces: string[];
+    excludePods: string[];
+  };
+  proxy: ProxyConfiguration;
+  accessLogging: {
+    enabled: boolean;
+    format: 'json' | 'text';
+    address: string;
+  };
+  tracing: TracingConfiguration;
+  defaultConfig: {
+    connectTimeout: number;
+    idleTimeout: number;
+    concurrency: number;
+    drainDuration: number;
+  };
+}
+
+// Namespace Config
+interface NamespaceConfig {
+  name: string;
+  sidecarInjection: boolean;
+  mtls: MTLSMode;
+  labels: Record<string, string>;
+}
+
+// Proxy Configuration
+interface ProxyConfiguration {
+  image: string;
+  tag: string;
+  resources: {
+    cpu: { request: string; limit: string };
+    memory: { request: string; limit: string };
+  };
+  concurrency: number;
+  logLevel: 'trace' | 'debug' | 'info' | 'warn' | 'error';
+  lifecycle: {
+    preStopHook: boolean;
+    terminationDrainDuration: number;
+  };
+  holdApplicationUntilProxyStarts: boolean;
+}
+
+// Tracing Configuration
+interface TracingConfiguration {
+  enabled: boolean;
+  provider: 'jaeger' | 'zipkin' | 'datadog' | 'lightstep';
+  sampling: number;
+  endpoint: string;
+  maxPathTagLength: number;
+}
+
+// Control Plane
+interface ControlPlane {
+  id: string;
+  status: 'healthy' | 'unhealthy' | 'degraded';
+  components: ControlPlaneComponent[];
+  version: string;
+  resources: {
+    cpu: number;
+    memory: number;
+  };
+  replicas: {
+    desired: number;
+    ready: number;
+    available: number;
+  };
+  endpoints: {
+    api: string;
+    webhook: string;
+    metrics: string;
+  };
+}
+
+// Control Plane Component
+interface ControlPlaneComponent {
+  name: string;
+  type: 'istiod' | 'pilot' | 'galley' | 'citadel' | 'mixer' | 'controller' | 'webhook';
+  status: 'healthy' | 'unhealthy' | 'unknown';
+  version: string;
+  replicas: number;
+  ready: number;
+  cpu: number;
+  memory: number;
+}
+
+// Data Plane
+interface DataPlane {
+  id: string;
+  totalProxies: number;
+  connectedProxies: number;
+  disconnectedProxies: number;
+  proxyVersion: string;
+  proxies: SidecarProxy[];
+  resources: {
+    totalCpu: number;
+    totalMemory: number;
+    avgCpu: number;
+    avgMemory: number;
+  };
+}
+
+// Sidecar Proxy
+interface SidecarProxy {
   id: string;
   name: string;
   namespace: string;
-  description: string;
-  protocol: ProtocolType;
-  instances: ServiceInstance[];
+  status: SidecarStatus;
+  version: string;
+  service: string;
+  pod: string;
+  node: string;
+  ip: string;
+  lastSyncTime: Date;
+  configStatus: 'synced' | 'pending' | 'stale';
+  certificates: {
+    valid: boolean;
+    expiresAt: Date;
+    issuer: string;
+  };
+  resources: {
+    cpu: number;
+    memory: number;
+    connections: number;
+  };
+  metrics: ProxyMetrics;
+}
+
+// Proxy Metrics
+interface ProxyMetrics {
+  requestsTotal: number;
+  requestsPerSecond: number;
+  latencyP50: number;
+  latencyP90: number;
+  latencyP99: number;
+  errorRate: number;
+  activeConnections: number;
+  bytesReceived: number;
+  bytesSent: number;
+}
+
+// Mesh Service
+interface MeshService {
+  id: string;
+  name: string;
+  namespace: string;
+  fqdn: string;
+  status: 'healthy' | 'unhealthy' | 'degraded' | 'unknown';
+  ports: ServicePort[];
   endpoints: ServiceEndpoint[];
+  workloads: Workload[];
+  virtualService?: VirtualService;
+  destinationRule?: DestinationRule;
+  serviceEntry?: ServiceEntry;
   dependencies: string[];
-  settings: {
-    timeout: number;
-    retries: number;
-    retryBackoff: number;
-    connectionPool: {
-      maxConnections: number;
-      maxIdleConnections: number;
-      idleTimeout: number;
-    };
+  dependents: string[];
+  mtls: {
+    mode: MTLSMode;
+    status: 'enabled' | 'disabled' | 'partial';
   };
-  loadBalancing: {
-    algorithm: LoadBalancingAlgorithm;
-    weights?: Record<string, number>;
-    healthCheck: {
-      enabled: boolean;
-      interval: number;
-      timeout: number;
-      unhealthyThreshold: number;
-      healthyThreshold: number;
-    };
-  };
-  circuitBreaker: CircuitBreakerConfig;
-  rateLimiting?: RateLimitConfig;
-  security: {
-    mtlsEnabled: boolean;
-    authRequired: boolean;
-    allowedClients: string[];
-  };
+  metrics: ServiceMeshMetrics;
   metadata: {
     createdAt: Date;
     updatedAt: Date;
-    owner: string;
-    team: string;
-    tags: string[];
+    labels: Record<string, string>;
+    annotations: Record<string, string>;
   };
 }
 
-// Service endpoint
+// Service Port
+interface ServicePort {
+  name: string;
+  port: number;
+  targetPort: number;
+  protocol: 'HTTP' | 'HTTPS' | 'HTTP2' | 'GRPC' | 'TCP' | 'TLS';
+}
+
+// Service Endpoint
 interface ServiceEndpoint {
-  id: string;
-  path: string;
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD';
-  description: string;
-  timeout?: number;
-  retries?: number;
-  rateLimit?: {
-    requestsPerSecond: number;
-    burstSize: number;
-  };
-  circuitBreaker?: CircuitBreakerConfig;
-  headers?: Record<string, string>;
-  responseTimeout: number;
+  ip: string;
+  port: number;
+  status: 'healthy' | 'unhealthy';
+  pod: string;
+  node: string;
+  zone: string;
 }
 
-// Circuit breaker config
-interface CircuitBreakerConfig {
-  enabled: boolean;
-  threshold: number;
-  timeout: number;
-  halfOpenRequests: number;
-  successThreshold: number;
-  failureThreshold: number;
-  excludeExceptions?: string[];
-}
-
-// Rate limit config
-interface RateLimitConfig {
-  enabled: boolean;
-  requestsPerSecond: number;
-  burstSize: number;
-  keyType: 'ip' | 'user' | 'service' | 'custom';
-  customKey?: string;
-  responseCode: number;
-}
-
-// Traffic rule
-interface TrafficRule {
+// Workload
+interface Workload {
   id: string;
   name: string;
-  description: string;
-  priority: number;
+  namespace: string;
+  type: 'deployment' | 'statefulset' | 'daemonset' | 'pod';
+  replicas: number;
+  ready: number;
+  sidecarInjected: boolean;
+  sidecarVersion?: string;
+  labels: Record<string, string>;
+}
+
+// Virtual Service
+interface VirtualService {
+  id: string;
+  name: string;
+  namespace: string;
+  hosts: string[];
+  gateways: string[];
+  http: HTTPRoute[];
+  tcp?: TCPRoute[];
+  tls?: TLSRoute[];
+  exportTo: string[];
+  metadata: {
+    createdAt: Date;
+    updatedAt: Date;
+  };
+}
+
+// HTTP Route
+interface HTTPRoute {
+  name: string;
+  match: HTTPMatch[];
+  route: RouteDestination[];
+  redirect?: HTTPRedirect;
+  rewrite?: HTTPRewrite;
+  timeout?: string;
+  retries?: RetryPolicy;
+  fault?: FaultInjection;
+  mirror?: MirrorPolicy;
+  headers?: HeaderManipulation;
+}
+
+// HTTP Match
+interface HTTPMatch {
+  uri?: StringMatch;
+  scheme?: StringMatch;
+  method?: StringMatch;
+  headers?: Record<string, StringMatch>;
+  queryParams?: Record<string, StringMatch>;
+  sourceLabels?: Record<string, string>;
+  sourceNamespace?: string;
+  port?: number;
+}
+
+// String Match
+interface StringMatch {
+  exact?: string;
+  prefix?: string;
+  regex?: string;
+}
+
+// Route Destination
+interface RouteDestination {
+  host: string;
+  subset?: string;
+  port?: number;
+  weight?: number;
+  headers?: HeaderManipulation;
+}
+
+// HTTP Redirect
+interface HTTPRedirect {
+  uri?: string;
+  authority?: string;
+  port?: number;
+  scheme?: string;
+  redirectCode?: number;
+}
+
+// HTTP Rewrite
+interface HTTPRewrite {
+  uri?: string;
+  authority?: string;
+}
+
+// Retry Policy
+interface RetryPolicy {
+  attempts: number;
+  perTryTimeout: string;
+  retryOn: string;
+  retryRemoteLocalities?: boolean;
+}
+
+// Fault Injection
+interface FaultInjection {
+  delay?: {
+    percentage: number;
+    fixedDelay: string;
+  };
+  abort?: {
+    percentage: number;
+    httpStatus: number;
+  };
+}
+
+// Mirror Policy
+interface MirrorPolicy {
+  host: string;
+  subset?: string;
+  port?: number;
+  percentage?: number;
+}
+
+// Header Manipulation
+interface HeaderManipulation {
+  request?: {
+    set?: Record<string, string>;
+    add?: Record<string, string>;
+    remove?: string[];
+  };
+  response?: {
+    set?: Record<string, string>;
+    add?: Record<string, string>;
+    remove?: string[];
+  };
+}
+
+// TCP Route
+interface TCPRoute {
+  match: { destinationSubnets?: string[]; port?: number; sourceLabels?: Record<string, string> }[];
+  route: { host: string; port?: number; weight?: number }[];
+}
+
+// TLS Route
+interface TLSRoute {
+  match: { sniHosts: string[]; port?: number; sourceLabels?: Record<string, string> }[];
+  route: { host: string; port?: number; weight?: number }[];
+}
+
+// Destination Rule
+interface DestinationRule {
+  id: string;
+  name: string;
+  namespace: string;
+  host: string;
+  trafficPolicy?: TrafficPolicyConfig;
+  subsets: Subset[];
+  exportTo: string[];
+  metadata: {
+    createdAt: Date;
+    updatedAt: Date;
+  };
+}
+
+// Traffic Policy Config
+interface TrafficPolicyConfig {
+  connectionPool?: ConnectionPool;
+  loadBalancer?: LoadBalancerSettings;
+  outlierDetection?: OutlierDetection;
+  tls?: TLSSettings;
+  portLevelSettings?: PortTrafficPolicy[];
+}
+
+// Connection Pool
+interface ConnectionPool {
+  tcp?: {
+    maxConnections: number;
+    connectTimeout: string;
+    tcpKeepalive?: { time: string; interval: string; probes: number };
+  };
+  http?: {
+    http1MaxPendingRequests: number;
+    http2MaxRequests: number;
+    maxRequestsPerConnection: number;
+    maxRetries: number;
+    idleTimeout: string;
+    h2UpgradePolicy: 'DEFAULT' | 'DO_NOT_UPGRADE' | 'UPGRADE';
+  };
+}
+
+// Load Balancer Settings
+interface LoadBalancerSettings {
+  simple?: 'ROUND_ROBIN' | 'LEAST_CONN' | 'RANDOM' | 'PASSTHROUGH';
+  consistentHash?: {
+    httpHeaderName?: string;
+    httpCookie?: { name: string; path?: string; ttl: string };
+    useSourceIp?: boolean;
+    httpQueryParameterName?: string;
+    minimumRingSize?: number;
+  };
+  localityLbSetting?: {
+    distribute?: { from: string; to: Record<string, number> }[];
+    failover?: { from: string; to: string }[];
+    failoverPriority?: string[];
+    enabled?: boolean;
+  };
+  warmupDurationSecs?: string;
+}
+
+// Outlier Detection
+interface OutlierDetection {
+  consecutiveLocalOriginFailures?: number;
+  consecutive5xxErrors?: number;
+  consecutiveGatewayErrors?: number;
+  interval?: string;
+  baseEjectionTime?: string;
+  maxEjectionPercent?: number;
+  minHealthPercent?: number;
+  splitExternalLocalOriginErrors?: boolean;
+}
+
+// TLS Settings
+interface TLSSettings {
+  mode: 'DISABLE' | 'SIMPLE' | 'MUTUAL' | 'ISTIO_MUTUAL';
+  clientCertificate?: string;
+  privateKey?: string;
+  caCertificates?: string;
+  credentialName?: string;
+  subjectAltNames?: string[];
+  sni?: string;
+  insecureSkipVerify?: boolean;
+}
+
+// Port Traffic Policy
+interface PortTrafficPolicy {
+  port: { number: number };
+  connectionPool?: ConnectionPool;
+  loadBalancer?: LoadBalancerSettings;
+  outlierDetection?: OutlierDetection;
+  tls?: TLSSettings;
+}
+
+// Subset
+interface Subset {
+  name: string;
+  labels: Record<string, string>;
+  trafficPolicy?: TrafficPolicyConfig;
+}
+
+// Service Entry
+interface ServiceEntry {
+  id: string;
+  name: string;
+  namespace: string;
+  hosts: string[];
+  location: 'MESH_EXTERNAL' | 'MESH_INTERNAL';
+  resolution: 'NONE' | 'STATIC' | 'DNS' | 'DNS_ROUND_ROBIN';
+  ports: { number: number; protocol: string; name: string }[];
+  endpoints?: { address: string; ports?: Record<string, number>; labels?: Record<string, string>; locality?: string; weight?: number }[];
+  exportTo?: string[];
+}
+
+// Mesh Policy
+interface MeshPolicy {
+  id: string;
+  name: string;
+  namespace: string;
+  type: TrafficPolicyType;
+  targets: PolicyTarget[];
+  configuration: PolicyConfiguration;
   enabled: boolean;
-  match: {
-    source?: {
-      services?: string[];
-      namespaces?: string[];
-      labels?: Record<string, string>;
-    };
-    destination?: {
-      service: string;
-      port?: number;
-    };
-    headers?: Record<string, string>;
-    paths?: string[];
-    methods?: string[];
+  priority: number;
+  metadata: {
+    createdAt: Date;
+    createdBy: string;
+    updatedAt: Date;
   };
-  action: {
-    type: 'route' | 'redirect' | 'mirror' | 'abort' | 'delay';
-    route?: {
-      destination: {
-        service: string;
-        subset?: string;
-        port?: number;
-      };
-      weight: number;
-    }[];
-    redirect?: {
-      uri?: string;
-      authority?: string;
-      responseCode?: number;
-    };
-    mirror?: {
-      service: string;
-      percentage: number;
-    };
-    abort?: {
-      percentage: number;
-      httpStatus: number;
-    };
-    delay?: {
-      percentage: number;
-      fixedDelay: number;
-    };
+}
+
+// Policy Target
+interface PolicyTarget {
+  service: string;
+  namespace?: string;
+  port?: number;
+  subset?: string;
+}
+
+// Policy Configuration
+interface PolicyConfiguration {
+  circuitBreaker?: {
+    consecutiveErrors: number;
+    interval: string;
+    baseEjectionTime: string;
+    maxEjectionPercent: number;
   };
-  timeout?: number;
-  retries?: {
+  retry?: {
     attempts: number;
-    perTryTimeout: number;
+    perTryTimeout: string;
     retryOn: string[];
   };
-  createdAt: Date;
-  updatedAt: Date;
+  timeout?: {
+    request: string;
+    idle: string;
+  };
+  rateLimit?: {
+    requestsPerUnit: number;
+    unit: 'second' | 'minute' | 'hour';
+    burstSize?: number;
+  };
+  loadBalancer?: {
+    algorithm: 'round-robin' | 'least-connections' | 'random' | 'consistent-hash';
+    consistentHashKey?: string;
+  };
 }
 
-// Service mesh gateway
-interface MeshGateway {
+// Gateway
+interface Gateway {
   id: string;
   name: string;
-  type: 'ingress' | 'egress' | 'internal';
+  namespace: string;
+  type: 'ingress' | 'egress';
+  selector: Record<string, string>;
+  servers: GatewayServer[];
+  status: 'active' | 'inactive' | 'error';
+  loadBalancerIP?: string;
+  externalIPs?: string[];
+  ports: { port: number; protocol: string; name: string }[];
+  tls?: GatewayTLS[];
+  metrics: GatewayMetrics;
+  metadata: {
+    createdAt: Date;
+    updatedAt: Date;
+  };
+}
+
+// Gateway Server
+interface GatewayServer {
+  port: { number: number; name: string; protocol: string };
   hosts: string[];
-  ports: {
-    number: number;
-    protocol: ProtocolType;
-    name: string;
-  }[];
   tls?: {
-    mode: 'passthrough' | 'simple' | 'mutual';
+    mode: 'PASSTHROUGH' | 'SIMPLE' | 'MUTUAL' | 'AUTO_PASSTHROUGH' | 'ISTIO_MUTUAL';
+    credentialName?: string;
     serverCertificate?: string;
     privateKey?: string;
     caCertificates?: string;
+    minProtocolVersion?: string;
+    maxProtocolVersion?: string;
+    cipherSuites?: string[];
   };
-  routes: GatewayRoute[];
-  status: 'active' | 'inactive' | 'error';
-  metadata: {
-    createdAt: Date;
-    updatedAt: Date;
-  };
+  name?: string;
 }
 
-// Gateway route
-interface GatewayRoute {
-  id: string;
+// Gateway TLS
+interface GatewayTLS {
   hosts: string[];
-  paths: string[];
-  destination: {
-    service: string;
-    port: number;
-    weight?: number;
-  }[];
-  headers?: {
-    request?: Record<string, string>;
-    response?: Record<string, string>;
-  };
-  rewrite?: {
-    uri?: string;
-    authority?: string;
-  };
-  timeout?: number;
+  secretName: string;
+  mode: 'terminate' | 'passthrough' | 'redirect';
 }
 
-// Service call
-interface ServiceCall {
-  id: string;
-  traceId: string;
-  spanId: string;
-  parentSpanId?: string;
-  source: {
-    service: string;
-    instance: string;
-    version: string;
+// Gateway Metrics
+interface GatewayMetrics {
+  requestsTotal: number;
+  requestsPerSecond: number;
+  bytesIn: number;
+  bytesOut: number;
+  activeConnections: number;
+  errorRate: number;
+}
+
+// Mesh Security
+interface MeshSecurity {
+  mtls: {
+    mode: MTLSMode;
+    allowedNamespaces: string[];
   };
-  destination: {
-    service: string;
-    instance: string;
-    version: string;
+  peerAuthentication: PeerAuthentication[];
+  requestAuthentication: RequestAuthentication[];
+  authorizationPolicies: AuthorizationPolicy[];
+  certificates: {
+    rootCA: string;
+    workloadCertTTL: string;
+    autoRotation: boolean;
+  };
+}
+
+// Peer Authentication
+interface PeerAuthentication {
+  id: string;
+  name: string;
+  namespace: string;
+  selector?: Record<string, string>;
+  mtls: { mode: MTLSMode };
+  portLevelMtls?: Record<number, { mode: MTLSMode }>;
+}
+
+// Request Authentication
+interface RequestAuthentication {
+  id: string;
+  name: string;
+  namespace: string;
+  selector?: Record<string, string>;
+  jwtRules: JWTRule[];
+}
+
+// JWT Rule
+interface JWTRule {
+  issuer: string;
+  audiences?: string[];
+  jwksUri?: string;
+  jwks?: string;
+  fromHeaders?: { name: string; prefix?: string }[];
+  fromParams?: string[];
+  outputPayloadToHeader?: string;
+  forwardOriginalToken?: boolean;
+}
+
+// Authorization Policy
+interface AuthorizationPolicy {
+  id: string;
+  name: string;
+  namespace: string;
+  selector?: Record<string, string>;
+  action: 'ALLOW' | 'DENY' | 'CUSTOM' | 'AUDIT';
+  rules: AuthorizationRule[];
+  provider?: string;
+}
+
+// Authorization Rule
+interface AuthorizationRule {
+  from?: { source: { principals?: string[]; requestPrincipals?: string[]; namespaces?: string[]; ipBlocks?: string[]; remoteIpBlocks?: string[]; notPrincipals?: string[]; notRequestPrincipals?: string[]; notNamespaces?: string[]; notIpBlocks?: string[]; notRemoteIpBlocks?: string[] } }[];
+  to?: { operation: { hosts?: string[]; notHosts?: string[]; ports?: string[]; notPorts?: string[]; methods?: string[]; notMethods?: string[]; paths?: string[]; notPaths?: string[] } }[];
+  when?: { key: string; values?: string[]; notValues?: string[] }[];
+}
+
+// Mesh Observability
+interface MeshObservability {
+  metrics: {
+    enabled: boolean;
+    provider: 'prometheus' | 'datadog' | 'cloudwatch';
+    endpoint: string;
+    scrapeInterval: number;
+  };
+  tracing: {
+    enabled: boolean;
+    provider: 'jaeger' | 'zipkin' | 'datadog';
+    sampling: number;
     endpoint: string;
   };
-  request: {
-    method: string;
-    path: string;
-    headers: Record<string, string>;
-    size: number;
+  logging: {
+    enabled: boolean;
+    accessLogFile: string;
+    accessLogFormat: string;
+    accessLogEncoding: 'JSON' | 'TEXT';
   };
-  response: {
-    statusCode: number;
-    headers: Record<string, string>;
-    size: number;
-  };
-  timing: {
-    startTime: Date;
-    endTime: Date;
-    duration: number;
-    serverTime: number;
-    networkTime: number;
-  };
-  status: 'success' | 'error' | 'timeout' | 'circuit_open';
-  error?: {
-    code: string;
-    message: string;
-    stack?: string;
-  };
-  metadata: {
-    userId?: string;
-    requestId?: string;
-    correlationId?: string;
+  dashboards: {
+    kiali?: string;
+    grafana?: string;
+    jaeger?: string;
   };
 }
 
-// Circuit breaker status
-interface CircuitBreakerStatus {
-  serviceId: string;
-  endpoint?: string;
-  state: CircuitState;
-  metrics: {
-    totalRequests: number;
-    failedRequests: number;
-    successRate: number;
-    lastFailure?: Date;
-    lastStateChange: Date;
-  };
-  config: CircuitBreakerConfig;
+// Traffic Management
+interface TrafficManagement {
+  virtualServices: VirtualService[];
+  destinationRules: DestinationRule[];
+  serviceEntries: ServiceEntry[];
+  envoyFilters: EnvoyFilter[];
+  sidecars: SidecarConfig[];
 }
 
-// Service mesh metrics
+// Envoy Filter
+interface EnvoyFilter {
+  id: string;
+  name: string;
+  namespace: string;
+  workloadSelector?: Record<string, string>;
+  configPatches: ConfigPatch[];
+  priority?: number;
+}
+
+// Config Patch
+interface ConfigPatch {
+  applyTo: 'LISTENER' | 'FILTER_CHAIN' | 'NETWORK_FILTER' | 'HTTP_FILTER' | 'ROUTE_CONFIGURATION' | 'VIRTUAL_HOST' | 'HTTP_ROUTE' | 'CLUSTER' | 'EXTENSION_CONFIG' | 'BOOTSTRAP' | 'LISTENER_FILTER';
+  match?: { context?: string; proxy?: Record<string, unknown>; listener?: Record<string, unknown>; routeConfiguration?: Record<string, unknown>; cluster?: Record<string, unknown> };
+  patch: { operation: 'MERGE' | 'ADD' | 'REMOVE' | 'INSERT_BEFORE' | 'INSERT_AFTER' | 'INSERT_FIRST' | 'REPLACE'; value?: Record<string, unknown>; filterClass?: string };
+}
+
+// Sidecar Config
+interface SidecarConfig {
+  id: string;
+  name: string;
+  namespace: string;
+  workloadSelector?: Record<string, string>;
+  ingress?: { port: { number: number; protocol: string; name: string }; bind?: string; captureMode?: string; defaultEndpoint?: string }[];
+  egress?: { port?: { number: number; protocol: string; name: string }; bind?: string; captureMode?: string; hosts: string[] }[];
+  outboundTrafficPolicy?: { mode: 'REGISTRY_ONLY' | 'ALLOW_ANY' };
+}
+
+// Service Mesh Metrics
+interface ServiceMeshMetrics {
+  requestsTotal: number;
+  requestsPerSecond: number;
+  successRate: number;
+  errorRate: number;
+  latencyP50: number;
+  latencyP90: number;
+  latencyP99: number;
+  bytesReceived: number;
+  bytesSent: number;
+  activeConnections: number;
+}
+
+// Mesh Metrics
 interface MeshMetrics {
-  period: { start: Date; end: Date };
   overview: {
     totalServices: number;
-    healthyServices: number;
-    totalInstances: number;
-    healthyInstances: number;
-    totalRequests: number;
+    totalWorkloads: number;
+    totalProxies: number;
+    healthyProxies: number;
+  };
+  traffic: {
+    requestsPerSecond: number;
+    successRate: number;
     errorRate: number;
     avgLatency: number;
   };
-  services: {
-    service: string;
-    requestCount: number;
-    errorCount: number;
-    errorRate: number;
-    latencyP50: number;
-    latencyP95: number;
-    latencyP99: number;
-  }[];
-  traffic: {
-    source: string;
-    destination: string;
-    requestCount: number;
-    errorRate: number;
-    avgLatency: number;
-  }[];
-  topEndpoints: {
-    service: string;
-    endpoint: string;
-    requestCount: number;
-    errorRate: number;
-    avgLatency: number;
-  }[];
+  resources: {
+    controlPlaneCpu: number;
+    controlPlaneMemory: number;
+    dataplaneCpu: number;
+    dataplaneMemory: number;
+  };
+  security: {
+    mtlsEnabled: number;
+    mtlsDisabled: number;
+    certificatesValid: number;
+    certificatesExpiring: number;
+  };
 }
 
-// Service dependency
-interface ServiceDependency {
-  source: string;
-  target: string;
-  callCount: number;
-  errorRate: number;
-  avgLatency: number;
-  lastCall: Date;
+// Mesh Statistics
+interface MeshStatistics {
+  overview: {
+    totalMeshes: number;
+    activeMeshes: number;
+    totalServices: number;
+    totalWorkloads: number;
+    totalProxies: number;
+  };
+  byType: Record<MeshType, number>;
+  byStatus: Record<MeshStatus, number>;
+  traffic: {
+    totalRequests: number;
+    requestsPerSecond: number;
+    avgSuccessRate: number;
+    avgErrorRate: number;
+  };
+  performance: {
+    avgLatencyP50: number;
+    avgLatencyP90: number;
+    avgLatencyP99: number;
+  };
+  security: {
+    mtlsStrictCount: number;
+    mtlsPermissiveCount: number;
+    mtlsDisabledCount: number;
+  };
+  trends: {
+    date: string;
+    requests: number;
+    successRate: number;
+    latency: number;
+  }[];
 }
 
 class ServiceMeshService {
   private static instance: ServiceMeshService;
-  private services: Map<string, ServiceDefinition> = new Map();
-  private instances: Map<string, ServiceInstance> = new Map();
-  private trafficRules: Map<string, TrafficRule> = new Map();
-  private gateways: Map<string, MeshGateway> = new Map();
-  private serviceCalls: Map<string, ServiceCall> = new Map();
-  private circuitBreakers: Map<string, CircuitBreakerStatus> = new Map();
-  private listeners: ((event: string, data: unknown) => void)[] = [];
+  private meshes: Map<string, ServiceMesh> = new Map();
+  private virtualServices: Map<string, VirtualService> = new Map();
+  private destinationRules: Map<string, DestinationRule> = new Map();
+  private gateways: Map<string, Gateway> = new Map();
+  private policies: Map<string, MeshPolicy> = new Map();
+  private eventListeners: ((event: string, data: unknown) => void)[] = [];
 
   private constructor() {
     this.initializeSampleData();
@@ -368,647 +829,317 @@ class ServiceMeshService {
     return ServiceMeshService.instance;
   }
 
-  /**
-   * Initialize sample data
-   */
+  private generateId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
   private initializeSampleData(): void {
-    // Initialize services
-    const servicesData = [
-      { name: 'api-gateway', desc: 'API Gateway service', protocol: 'https' },
-      { name: 'user-service', desc: 'User management service', protocol: 'grpc' },
-      { name: 'alert-service', desc: 'Alert management service', protocol: 'grpc' },
-      { name: 'notification-service', desc: 'Notification delivery service', protocol: 'grpc' },
-      { name: 'auth-service', desc: 'Authentication service', protocol: 'grpc' },
-      { name: 'location-service', desc: 'Location tracking service', protocol: 'grpc' },
-      { name: 'analytics-service', desc: 'Analytics and reporting service', protocol: 'http' },
-      { name: 'media-service', desc: 'Media processing service', protocol: 'http' },
-      { name: 'search-service', desc: 'Search functionality service', protocol: 'grpc' },
-      { name: 'cache-service', desc: 'Distributed cache service', protocol: 'tcp' },
-    ];
-
-    servicesData.forEach((s, idx) => {
-      const service: ServiceDefinition = {
-        id: `svc-${(idx + 1).toString().padStart(4, '0')}`,
-        name: s.name,
-        namespace: 'production',
-        description: s.desc,
-        protocol: s.protocol as ProtocolType,
-        instances: [],
-        endpoints: [],
-        dependencies: [],
-        settings: {
-          timeout: 30000,
-          retries: 3,
-          retryBackoff: 1000,
-          connectionPool: {
-            maxConnections: 100,
-            maxIdleConnections: 10,
-            idleTimeout: 300000,
-          },
-        },
-        loadBalancing: {
-          algorithm: 'round_robin',
-          healthCheck: {
-            enabled: true,
-            interval: 10000,
-            timeout: 5000,
-            unhealthyThreshold: 3,
-            healthyThreshold: 2,
-          },
-        },
-        circuitBreaker: {
-          enabled: true,
-          threshold: 50,
-          timeout: 30000,
-          halfOpenRequests: 3,
-          successThreshold: 5,
-          failureThreshold: 5,
-        },
-        rateLimiting: {
-          enabled: true,
-          requestsPerSecond: 1000,
-          burstSize: 100,
-          keyType: 'service',
-          responseCode: 429,
-        },
-        security: {
-          mtlsEnabled: true,
-          authRequired: true,
-          allowedClients: ['api-gateway', 'internal-services'],
-        },
-        metadata: {
-          createdAt: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(),
-          owner: `team-${(idx % 3) + 1}`,
-          team: ['platform', 'backend', 'infrastructure'][idx % 3],
-          tags: ['microservice', s.protocol, 'production'],
-        },
-      };
-
-      // Add instances
-      const instanceCount = Math.floor(Math.random() * 3) + 2;
-      for (let i = 0; i < instanceCount; i++) {
-        const instance: ServiceInstance = {
-          id: `inst-${service.id}-${i + 1}`,
-          serviceId: service.id,
-          host: `${s.name}-${i + 1}.mesh.local`,
-          port: 8080 + i,
-          status: i === 0 ? 'healthy' : ['healthy', 'healthy', 'degraded'][i % 3],
-          metadata: {
-            version: `1.${idx}.${i}`,
-            zone: ['zone-a', 'zone-b', 'zone-c'][i % 3],
-            region: 'asia-south1',
-            labels: { tier: 'production', pod: `pod-${i + 1}` },
-          },
-          health: {
-            lastCheck: new Date(),
-            consecutiveFailures: 0,
-            consecutiveSuccesses: i === 0 ? 100 : Math.floor(Math.random() * 50),
-            lastSuccess: new Date(),
-          },
-          metrics: {
-            requestCount: Math.floor(Math.random() * 100000) + 10000,
-            errorCount: Math.floor(Math.random() * 100),
-            latencyP50: Math.floor(Math.random() * 50) + 10,
-            latencyP95: Math.floor(Math.random() * 150) + 50,
-            latencyP99: Math.floor(Math.random() * 300) + 100,
-            activeConnections: Math.floor(Math.random() * 50) + 10,
-          },
-          registeredAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-          lastHeartbeat: new Date(),
-        };
-        service.instances.push(instance);
-        this.instances.set(instance.id, instance);
-      }
-
-      // Add endpoints
-      const endpointsData = [
-        { path: '/health', method: 'GET', desc: 'Health check endpoint' },
-        { path: '/api/v1/resource', method: 'GET', desc: 'Get resources' },
-        { path: '/api/v1/resource', method: 'POST', desc: 'Create resource' },
-        { path: '/api/v1/resource/:id', method: 'PUT', desc: 'Update resource' },
-        { path: '/api/v1/resource/:id', method: 'DELETE', desc: 'Delete resource' },
-      ];
-
-      endpointsData.forEach((ep, epIdx) => {
-        service.endpoints.push({
-          id: `ep-${service.id}-${epIdx + 1}`,
-          path: ep.path,
-          method: ep.method as ServiceEndpoint['method'],
-          description: ep.desc,
-          timeout: 30000,
-          retries: 2,
-          responseTimeout: 30000,
-        });
-      });
-
-      // Add dependencies
-      if (idx > 0) {
-        service.dependencies = servicesData
-          .slice(0, idx)
-          .filter(() => Math.random() > 0.5)
-          .map((d, dIdx) => `svc-${(dIdx + 1).toString().padStart(4, '0')}`);
-      }
-
-      this.services.set(service.id, service);
-
-      // Initialize circuit breaker status
-      const cbStatus: CircuitBreakerStatus = {
-        serviceId: service.id,
-        state: 'closed',
-        metrics: {
-          totalRequests: Math.floor(Math.random() * 100000) + 10000,
-          failedRequests: Math.floor(Math.random() * 100),
-          successRate: 99 + Math.random(),
-          lastStateChange: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-        },
-        config: service.circuitBreaker,
-      };
-      this.circuitBreakers.set(service.id, cbStatus);
-    });
-
-    // Initialize traffic rules
-    const trafficRulesData = [
-      { name: 'Canary Release', desc: 'Route 10% traffic to canary version', priority: 100 },
-      { name: 'Header Routing', desc: 'Route based on custom header', priority: 90 },
-      { name: 'A/B Testing', desc: 'Split traffic for A/B testing', priority: 80 },
-      { name: 'Fault Injection', desc: 'Inject faults for testing', priority: 70 },
-      { name: 'Rate Limiting', desc: 'Rate limit specific endpoints', priority: 60 },
-    ];
-
-    trafficRulesData.forEach((rule, idx) => {
-      const trafficRule: TrafficRule = {
-        id: `rule-${(idx + 1).toString().padStart(4, '0')}`,
-        name: rule.name,
-        description: rule.desc,
-        priority: rule.priority,
-        enabled: idx < 3,
-        match: {
-          destination: {
-            service: `svc-${(idx + 1).toString().padStart(4, '0')}`,
-          },
-        },
-        action: {
-          type: idx === 0 ? 'route' : idx === 3 ? 'delay' : 'route',
-          route: idx !== 3 ? [
-            { destination: { service: `svc-${(idx + 1).toString().padStart(4, '0')}`, subset: 'stable' }, weight: 90 },
-            { destination: { service: `svc-${(idx + 1).toString().padStart(4, '0')}`, subset: 'canary' }, weight: 10 },
-          ] : undefined,
-          delay: idx === 3 ? { percentage: 10, fixedDelay: 500 } : undefined,
-        },
-        timeout: 30000,
-        retries: { attempts: 3, perTryTimeout: 10000, retryOn: ['5xx', 'reset', 'connect-failure'] },
-        createdAt: new Date(Date.now() - idx * 7 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(),
-      };
-      this.trafficRules.set(trafficRule.id, trafficRule);
-    });
-
-    // Initialize gateways
-    const gatewaysData = [
-      { name: 'Main Ingress', type: 'ingress', hosts: ['api.alertaid.com', 'www.alertaid.com'] },
-      { name: 'Admin Ingress', type: 'ingress', hosts: ['admin.alertaid.com'] },
-      { name: 'External Egress', type: 'egress', hosts: ['*.external-service.com'] },
-    ];
-
-    gatewaysData.forEach((gw, idx) => {
-      const gateway: MeshGateway = {
-        id: `gw-${(idx + 1).toString().padStart(4, '0')}`,
-        name: gw.name,
-        type: gw.type as MeshGateway['type'],
-        hosts: gw.hosts,
-        ports: [
-          { number: 80, protocol: 'http', name: 'http' },
-          { number: 443, protocol: 'https', name: 'https' },
+    // Initialize Service Meshes
+    const meshData: ServiceMesh = {
+      id: 'mesh-0001',
+      name: 'Production Mesh',
+      description: 'Main production service mesh',
+      type: 'istio',
+      version: '1.19.0',
+      status: 'active',
+      configuration: {
+        namespace: 'istio-system',
+        namespaces: [
+          { name: 'default', sidecarInjection: true, mtls: 'strict', labels: { 'istio-injection': 'enabled' } },
+          { name: 'api', sidecarInjection: true, mtls: 'strict', labels: { 'istio-injection': 'enabled' } },
+          { name: 'web', sidecarInjection: true, mtls: 'strict', labels: { 'istio-injection': 'enabled' } },
         ],
-        tls: gw.type === 'ingress' ? {
-          mode: 'simple',
-          serverCertificate: '/etc/certs/server.crt',
-          privateKey: '/etc/certs/server.key',
-        } : undefined,
-        routes: [
-          {
-            id: `route-${idx}-1`,
-            hosts: gw.hosts,
-            paths: ['/api/*'],
-            destination: [{ service: 'svc-0001', port: 8080, weight: 100 }],
-            timeout: 30000,
-          },
+        sidecarInjection: { enabled: true, autoInject: true, namespaceSelector: { 'istio-injection': 'enabled' }, podSelector: {}, excludeNamespaces: ['kube-system', 'kube-public'], excludePods: [] },
+        proxy: { image: 'docker.io/istio/proxyv2', tag: '1.19.0', resources: { cpu: { request: '100m', limit: '2000m' }, memory: { request: '128Mi', limit: '1024Mi' } }, concurrency: 2, logLevel: 'warn', lifecycle: { preStopHook: true, terminationDrainDuration: 5 }, holdApplicationUntilProxyStarts: true },
+        accessLogging: { enabled: true, format: 'json', address: '/dev/stdout' },
+        tracing: { enabled: true, provider: 'jaeger', sampling: 1, endpoint: 'http://jaeger-collector.observability:14268/api/traces', maxPathTagLength: 256 },
+        defaultConfig: { connectTimeout: 10, idleTimeout: 300, concurrency: 2, drainDuration: 45 },
+      },
+      controlPlane: {
+        id: 'cp-0001',
+        status: 'healthy',
+        components: [
+          { name: 'istiod', type: 'istiod', status: 'healthy', version: '1.19.0', replicas: 3, ready: 3, cpu: 15, memory: 512 },
+        ],
+        version: '1.19.0',
+        resources: { cpu: 15, memory: 512 },
+        replicas: { desired: 3, ready: 3, available: 3 },
+        endpoints: { api: 'https://istiod.istio-system:15012', webhook: 'https://istiod.istio-system:15017', metrics: 'http://istiod.istio-system:15014' },
+      },
+      dataPlane: {
+        id: 'dp-0001',
+        totalProxies: 50,
+        connectedProxies: 48,
+        disconnectedProxies: 2,
+        proxyVersion: '1.19.0',
+        proxies: Array.from({ length: 10 }, (_, i) => ({
+          id: `proxy-${i}`,
+          name: `service-${i}-proxy`,
+          namespace: ['default', 'api', 'web'][i % 3],
+          status: i < 8 ? 'running' : i === 8 ? 'pending' : 'unknown',
+          version: '1.19.0',
+          service: `service-${i}`,
+          pod: `service-${i}-pod-0`,
+          node: `node-${i % 3}`,
+          ip: `10.0.${i}.10`,
+          lastSyncTime: new Date(Date.now() - Math.random() * 60 * 1000),
+          configStatus: i < 8 ? 'synced' : 'pending',
+          certificates: { valid: true, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), issuer: 'istiod' },
+          resources: { cpu: Math.random() * 10 + 2, memory: Math.random() * 100 + 50, connections: Math.floor(Math.random() * 100) + 20 },
+          metrics: { requestsTotal: Math.floor(Math.random() * 100000) + 50000, requestsPerSecond: Math.random() * 100 + 50, latencyP50: Math.random() * 10 + 2, latencyP90: Math.random() * 50 + 10, latencyP99: Math.random() * 100 + 50, errorRate: Math.random() * 0.5, activeConnections: Math.floor(Math.random() * 50) + 10, bytesReceived: Math.floor(Math.random() * 1000000000), bytesSent: Math.floor(Math.random() * 2000000000) },
+        })),
+        resources: { totalCpu: 50, totalMemory: 2048, avgCpu: 5, avgMemory: 100 },
+      },
+      services: Array.from({ length: 8 }, (_, i) => ({
+        id: `svc-${i}`,
+        name: `service-${i}`,
+        namespace: ['default', 'api', 'web'][i % 3],
+        fqdn: `service-${i}.${['default', 'api', 'web'][i % 3]}.svc.cluster.local`,
+        status: i < 6 ? 'healthy' : i === 6 ? 'degraded' : 'unhealthy',
+        ports: [{ name: 'http', port: 8080, targetPort: 8080, protocol: 'HTTP' }],
+        endpoints: [{ ip: `10.0.${i}.10`, port: 8080, status: 'healthy', pod: `service-${i}-pod-0`, node: `node-${i % 3}`, zone: `zone-${i % 3}` }],
+        workloads: [{ id: `wl-${i}`, name: `service-${i}`, namespace: ['default', 'api', 'web'][i % 3], type: 'deployment', replicas: 3, ready: i < 6 ? 3 : i === 6 ? 2 : 1, sidecarInjected: true, sidecarVersion: '1.19.0', labels: { app: `service-${i}` } }],
+        dependencies: i > 0 ? [`service-${i - 1}`] : [],
+        dependents: i < 7 ? [`service-${i + 1}`] : [],
+        mtls: { mode: 'strict', status: 'enabled' },
+        metrics: { requestsTotal: Math.floor(Math.random() * 500000), requestsPerSecond: Math.random() * 500, successRate: i < 6 ? 99.9 : i === 6 ? 98.5 : 95.0, errorRate: i < 6 ? 0.1 : i === 6 ? 1.5 : 5.0, latencyP50: Math.random() * 20 + 5, latencyP90: Math.random() * 50 + 20, latencyP99: Math.random() * 150 + 50, bytesReceived: Math.floor(Math.random() * 500000000), bytesSent: Math.floor(Math.random() * 1000000000), activeConnections: Math.floor(Math.random() * 200) + 50 },
+        metadata: { createdAt: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000), updatedAt: new Date(), labels: { app: `service-${i}`, version: 'v1' }, annotations: {} },
+      })),
+      policies: [],
+      gateways: [],
+      security: {
+        mtls: { mode: 'strict', allowedNamespaces: ['default', 'api', 'web'] },
+        peerAuthentication: [{ id: 'pa-1', name: 'default', namespace: 'istio-system', mtls: { mode: 'STRICT' } }],
+        requestAuthentication: [],
+        authorizationPolicies: [{ id: 'ap-1', name: 'deny-all', namespace: 'default', action: 'DENY', rules: [] }],
+        certificates: { rootCA: 'istio-ca-secret', workloadCertTTL: '24h', autoRotation: true },
+      },
+      observability: {
+        metrics: { enabled: true, provider: 'prometheus', endpoint: 'http://prometheus.monitoring:9090', scrapeInterval: 15 },
+        tracing: { enabled: true, provider: 'jaeger', sampling: 1, endpoint: 'http://jaeger.observability:14268' },
+        logging: { enabled: true, accessLogFile: '/dev/stdout', accessLogFormat: '[%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%" %RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT% %DURATION% %RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)% "%REQ(X-FORWARDED-FOR)%" "%REQ(USER-AGENT)%" "%REQ(X-REQUEST-ID)%" "%REQ(:AUTHORITY)%" "%UPSTREAM_HOST%"', accessLogEncoding: 'JSON' },
+        dashboards: { kiali: 'http://kiali.istio-system:20001', grafana: 'http://grafana.monitoring:3000', jaeger: 'http://jaeger.observability:16686' },
+      },
+      trafficManagement: { virtualServices: [], destinationRules: [], serviceEntries: [], envoyFilters: [], sidecars: [] },
+      metrics: {
+        overview: { totalServices: 8, totalWorkloads: 8, totalProxies: 50, healthyProxies: 48 },
+        traffic: { requestsPerSecond: 2500, successRate: 99.5, errorRate: 0.5, avgLatency: 25 },
+        resources: { controlPlaneCpu: 15, controlPlaneMemory: 512, dataplaneCpu: 50, dataplaneMemory: 2048 },
+        security: { mtlsEnabled: 8, mtlsDisabled: 0, certificatesValid: 50, certificatesExpiring: 2 },
+      },
+      tags: ['production', 'istio', 'critical'],
+      metadata: { createdAt: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000), createdBy: 'admin', updatedAt: new Date(), namespace: 'istio-system', cluster: 'prod-cluster' },
+    };
+    this.meshes.set(meshData.id, meshData);
+
+    // Initialize Gateways
+    const gatewaysData = [
+      { name: 'Main Ingress', type: 'ingress' as const },
+      { name: 'API Gateway', type: 'ingress' as const },
+      { name: 'External Egress', type: 'egress' as const },
+    ];
+
+    gatewaysData.forEach((g, idx) => {
+      const gateway: Gateway = {
+        id: `gw-${(idx + 1).toString().padStart(4, '0')}`,
+        name: g.name,
+        namespace: 'istio-system',
+        type: g.type,
+        selector: { istio: g.type },
+        servers: [
+          { port: { number: 443, name: 'https', protocol: 'HTTPS' }, hosts: ['*.alertaid.io'], tls: { mode: 'SIMPLE', credentialName: 'alertaid-tls' } },
+          { port: { number: 80, name: 'http', protocol: 'HTTP' }, hosts: ['*.alertaid.io'] },
         ],
         status: 'active',
-        metadata: {
-          createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(),
-        },
+        loadBalancerIP: `52.1.${idx}.100`,
+        externalIPs: [`52.1.${idx}.100`, `52.1.${idx}.101`],
+        ports: [{ port: 443, protocol: 'HTTPS', name: 'https' }, { port: 80, protocol: 'HTTP', name: 'http' }],
+        tls: [{ hosts: ['*.alertaid.io'], secretName: 'alertaid-tls', mode: 'terminate' }],
+        metrics: { requestsTotal: Math.floor(Math.random() * 10000000), requestsPerSecond: Math.random() * 2000 + 500, bytesIn: Math.floor(Math.random() * 5000000000), bytesOut: Math.floor(Math.random() * 10000000000), activeConnections: Math.floor(Math.random() * 5000) + 1000, errorRate: Math.random() * 0.5 },
+        metadata: { createdAt: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000), updatedAt: new Date() },
       };
       this.gateways.set(gateway.id, gateway);
     });
 
-    // Initialize service calls
-    for (let i = 0; i < 100; i++) {
-      const sourceIdx = i % 10;
-      const destIdx = (i + 1) % 10;
-      const call: ServiceCall = {
-        id: `call-${(i + 1).toString().padStart(8, '0')}`,
-        traceId: this.generateTraceId(),
-        spanId: this.generateSpanId(),
-        parentSpanId: i > 0 ? this.generateSpanId() : undefined,
-        source: {
-          service: `svc-${(sourceIdx + 1).toString().padStart(4, '0')}`,
-          instance: `inst-svc-${(sourceIdx + 1).toString().padStart(4, '0')}-1`,
-          version: '1.0.0',
+    // Initialize Policies
+    const policiesData = [
+      { name: 'API Circuit Breaker', type: 'circuit-breaker' as TrafficPolicyType },
+      { name: 'Global Retry Policy', type: 'retry' as TrafficPolicyType },
+      { name: 'Rate Limit', type: 'rate-limit' as TrafficPolicyType },
+      { name: 'Request Timeout', type: 'timeout' as TrafficPolicyType },
+    ];
+
+    policiesData.forEach((p, idx) => {
+      const policy: MeshPolicy = {
+        id: `policy-${(idx + 1).toString().padStart(4, '0')}`,
+        name: p.name,
+        namespace: 'default',
+        type: p.type,
+        targets: [{ service: '*', namespace: 'default' }],
+        configuration: {
+          circuitBreaker: p.type === 'circuit-breaker' ? { consecutiveErrors: 5, interval: '10s', baseEjectionTime: '30s', maxEjectionPercent: 50 } : undefined,
+          retry: p.type === 'retry' ? { attempts: 3, perTryTimeout: '2s', retryOn: ['5xx', 'reset', 'connect-failure'] } : undefined,
+          rateLimit: p.type === 'rate-limit' ? { requestsPerUnit: 1000, unit: 'second', burstSize: 100 } : undefined,
+          timeout: p.type === 'timeout' ? { request: '30s', idle: '300s' } : undefined,
         },
-        destination: {
-          service: `svc-${(destIdx + 1).toString().padStart(4, '0')}`,
-          instance: `inst-svc-${(destIdx + 1).toString().padStart(4, '0')}-1`,
-          version: '1.0.0',
-          endpoint: '/api/v1/resource',
-        },
-        request: {
-          method: ['GET', 'POST', 'PUT', 'DELETE'][i % 4],
-          path: '/api/v1/resource',
-          headers: { 'content-type': 'application/json' },
-          size: Math.floor(Math.random() * 1000) + 100,
-        },
-        response: {
-          statusCode: i % 20 === 0 ? 500 : 200,
-          headers: { 'content-type': 'application/json' },
-          size: Math.floor(Math.random() * 5000) + 500,
-        },
-        timing: {
-          startTime: new Date(Date.now() - i * 60 * 1000),
-          endTime: new Date(Date.now() - i * 60 * 1000 + Math.floor(Math.random() * 100)),
-          duration: Math.floor(Math.random() * 100) + 10,
-          serverTime: Math.floor(Math.random() * 80) + 5,
-          networkTime: Math.floor(Math.random() * 20) + 5,
-        },
-        status: i % 20 === 0 ? 'error' : 'success',
-        error: i % 20 === 0 ? { code: 'INTERNAL_ERROR', message: 'Internal server error' } : undefined,
-        metadata: {
-          requestId: `req-${i + 1}`,
-          correlationId: `corr-${Math.floor(i / 5) + 1}`,
-        },
+        enabled: true,
+        priority: idx + 1,
+        metadata: { createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), createdBy: 'admin', updatedAt: new Date() },
       };
-      this.serviceCalls.set(call.id, call);
-    }
+      this.policies.set(policy.id, policy);
+    });
   }
 
-  /**
-   * Generate trace ID
-   */
-  private generateTraceId(): string {
-    return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  // Mesh Operations
+  public getMeshes(status?: MeshStatus): ServiceMesh[] {
+    let meshes = Array.from(this.meshes.values());
+    if (status) meshes = meshes.filter((m) => m.status === status);
+    return meshes;
   }
 
-  /**
-   * Generate span ID
-   */
-  private generateSpanId(): string {
-    return Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  public getMeshById(id: string): ServiceMesh | undefined {
+    return this.meshes.get(id);
   }
 
-  /**
-   * Get services
-   */
-  public getServices(filter?: {
-    namespace?: string;
-    status?: ServiceStatus;
-    protocol?: ProtocolType;
-  }): ServiceDefinition[] {
-    let services = Array.from(this.services.values());
-    if (filter?.namespace) services = services.filter((s) => s.namespace === filter.namespace);
-    if (filter?.protocol) services = services.filter((s) => s.protocol === filter.protocol);
-    if (filter?.status) {
-      services = services.filter((s) => {
-        const healthyInstances = s.instances.filter((i) => i.status === 'healthy').length;
-        if (filter.status === 'healthy') return healthyInstances === s.instances.length;
-        if (filter.status === 'unhealthy') return healthyInstances === 0;
-        return healthyInstances > 0 && healthyInstances < s.instances.length;
-      });
-    }
-    return services.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  /**
-   * Get service
-   */
-  public getService(id: string): ServiceDefinition | undefined {
-    return this.services.get(id);
-  }
-
-  /**
-   * Get service by name
-   */
-  public getServiceByName(name: string, namespace: string = 'production'): ServiceDefinition | undefined {
-    return Array.from(this.services.values()).find(
-      (s) => s.name === name && s.namespace === namespace
-    );
-  }
-
-  /**
-   * Register service instance
-   */
-  public registerInstance(serviceId: string, instance: Omit<ServiceInstance, 'id' | 'serviceId'>): ServiceInstance {
-    const service = this.services.get(serviceId);
-    if (!service) throw new Error('Service not found');
-
-    const newInstance: ServiceInstance = {
-      ...instance,
-      id: `inst-${serviceId}-${Date.now()}`,
-      serviceId,
-    };
-
-    service.instances.push(newInstance);
-    this.instances.set(newInstance.id, newInstance);
-
-    this.emit('instance_registered', newInstance);
-
-    return newInstance;
-  }
-
-  /**
-   * Deregister service instance
-   */
-  public deregisterInstance(instanceId: string): void {
-    const instance = this.instances.get(instanceId);
-    if (!instance) throw new Error('Instance not found');
-
-    const service = this.services.get(instance.serviceId);
-    if (service) {
-      service.instances = service.instances.filter((i) => i.id !== instanceId);
-    }
-
-    this.instances.delete(instanceId);
-
-    this.emit('instance_deregistered', { instanceId });
-  }
-
-  /**
-   * Get service instances
-   */
-  public getInstances(serviceId: string): ServiceInstance[] {
-    const service = this.services.get(serviceId);
-    return service?.instances || [];
-  }
-
-  /**
-   * Update instance health
-   */
-  public updateInstanceHealth(instanceId: string, healthy: boolean): void {
-    const instance = this.instances.get(instanceId);
-    if (!instance) throw new Error('Instance not found');
-
-    instance.health.lastCheck = new Date();
-    if (healthy) {
-      instance.health.consecutiveSuccesses++;
-      instance.health.consecutiveFailures = 0;
-      instance.health.lastSuccess = new Date();
-      if (instance.health.consecutiveSuccesses >= 2) {
-        instance.status = 'healthy';
-      }
-    } else {
-      instance.health.consecutiveFailures++;
-      instance.health.consecutiveSuccesses = 0;
-      instance.health.lastFailure = new Date();
-      if (instance.health.consecutiveFailures >= 3) {
-        instance.status = 'unhealthy';
-      } else if (instance.health.consecutiveFailures >= 2) {
-        instance.status = 'degraded';
-      }
-    }
-
-    this.emit('instance_health_updated', instance);
-  }
-
-  /**
-   * Get traffic rules
-   */
-  public getTrafficRules(filter?: { enabled?: boolean; serviceId?: string }): TrafficRule[] {
-    let rules = Array.from(this.trafficRules.values());
-    if (filter?.enabled !== undefined) rules = rules.filter((r) => r.enabled === filter.enabled);
-    if (filter?.serviceId) rules = rules.filter((r) => r.match.destination?.service === filter.serviceId);
-    return rules.sort((a, b) => b.priority - a.priority);
-  }
-
-  /**
-   * Get traffic rule
-   */
-  public getTrafficRule(id: string): TrafficRule | undefined {
-    return this.trafficRules.get(id);
-  }
-
-  /**
-   * Create traffic rule
-   */
-  public createTrafficRule(rule: Omit<TrafficRule, 'id' | 'createdAt' | 'updatedAt'>): TrafficRule {
-    const newRule: TrafficRule = {
-      ...rule,
-      id: `rule-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    this.trafficRules.set(newRule.id, newRule);
-
-    this.emit('traffic_rule_created', newRule);
-
-    return newRule;
-  }
-
-  /**
-   * Get gateways
-   */
-  public getGateways(filter?: { type?: MeshGateway['type']; status?: MeshGateway['status'] }): MeshGateway[] {
+  // Gateway Operations
+  public getGateways(type?: 'ingress' | 'egress'): Gateway[] {
     let gateways = Array.from(this.gateways.values());
-    if (filter?.type) gateways = gateways.filter((g) => g.type === filter.type);
-    if (filter?.status) gateways = gateways.filter((g) => g.status === filter.status);
+    if (type) gateways = gateways.filter((g) => g.type === type);
     return gateways;
   }
 
-  /**
-   * Get gateway
-   */
-  public getGateway(id: string): MeshGateway | undefined {
+  public getGatewayById(id: string): Gateway | undefined {
     return this.gateways.get(id);
   }
 
-  /**
-   * Get service calls
-   */
-  public getServiceCalls(filter?: {
-    sourceService?: string;
-    destinationService?: string;
-    status?: ServiceCall['status'];
-    limit?: number;
-  }): ServiceCall[] {
-    let calls = Array.from(this.serviceCalls.values());
-    if (filter?.sourceService) calls = calls.filter((c) => c.source.service === filter.sourceService);
-    if (filter?.destinationService) calls = calls.filter((c) => c.destination.service === filter.destinationService);
-    if (filter?.status) calls = calls.filter((c) => c.status === filter.status);
-    calls = calls.sort((a, b) => b.timing.startTime.getTime() - a.timing.startTime.getTime());
-    if (filter?.limit) calls = calls.slice(0, filter.limit);
-    return calls;
+  // Policy Operations
+  public getPolicies(type?: TrafficPolicyType): MeshPolicy[] {
+    let policies = Array.from(this.policies.values());
+    if (type) policies = policies.filter((p) => p.type === type);
+    return policies;
   }
 
-  /**
-   * Get circuit breaker status
-   */
-  public getCircuitBreakerStatus(serviceId: string): CircuitBreakerStatus | undefined {
-    return this.circuitBreakers.get(serviceId);
+  public getPolicyById(id: string): MeshPolicy | undefined {
+    return this.policies.get(id);
   }
 
-  /**
-   * Open circuit breaker
-   */
-  public openCircuitBreaker(serviceId: string): void {
-    const cb = this.circuitBreakers.get(serviceId);
-    if (!cb) throw new Error('Circuit breaker not found');
+  // Statistics
+  public getStatistics(): MeshStatistics {
+    const meshes = Array.from(this.meshes.values());
+    const byType: Record<MeshType, number> = {} as Record<MeshType, number>;
+    const byStatus: Record<MeshStatus, number> = {} as Record<MeshStatus, number>;
 
-    cb.state = 'open';
-    cb.metrics.lastStateChange = new Date();
-
-    this.emit('circuit_breaker_opened', { serviceId });
-  }
-
-  /**
-   * Close circuit breaker
-   */
-  public closeCircuitBreaker(serviceId: string): void {
-    const cb = this.circuitBreakers.get(serviceId);
-    if (!cb) throw new Error('Circuit breaker not found');
-
-    cb.state = 'closed';
-    cb.metrics.lastStateChange = new Date();
-
-    this.emit('circuit_breaker_closed', { serviceId });
-  }
-
-  /**
-   * Get service dependencies
-   */
-  public getServiceDependencies(): ServiceDependency[] {
-    const dependencies: Map<string, ServiceDependency> = new Map();
-
-    this.serviceCalls.forEach((call) => {
-      const key = `${call.source.service}->${call.destination.service}`;
-      const existing = dependencies.get(key);
-
-      if (existing) {
-        existing.callCount++;
-        existing.lastCall = call.timing.startTime;
-        if (call.status === 'error') {
-          existing.errorRate = (existing.errorRate * (existing.callCount - 1) + 100) / existing.callCount;
-        }
-        existing.avgLatency = (existing.avgLatency * (existing.callCount - 1) + call.timing.duration) / existing.callCount;
-      } else {
-        dependencies.set(key, {
-          source: call.source.service,
-          target: call.destination.service,
-          callCount: 1,
-          errorRate: call.status === 'error' ? 100 : 0,
-          avgLatency: call.timing.duration,
-          lastCall: call.timing.startTime,
-        });
-      }
-    });
-
-    return Array.from(dependencies.values());
-  }
-
-  /**
-   * Get mesh metrics
-   */
-  public getMetrics(period: { start: Date; end: Date }): MeshMetrics {
-    const services = Array.from(this.services.values());
-    const calls = Array.from(this.serviceCalls.values()).filter(
-      (c) => c.timing.startTime >= period.start && c.timing.startTime <= period.end
-    );
-
-    const healthyServices = services.filter((s) =>
-      s.instances.every((i) => i.status === 'healthy')
-    ).length;
-
-    const healthyInstances = Array.from(this.instances.values()).filter(
-      (i) => i.status === 'healthy'
-    ).length;
-
-    const errorCount = calls.filter((c) => c.status === 'error').length;
-    const totalLatency = calls.reduce((sum, c) => sum + c.timing.duration, 0);
-
-    // Service metrics
-    const serviceMetrics: Map<string, { requests: number; errors: number; latencies: number[] }> = new Map();
-    calls.forEach((call) => {
-      const key = call.destination.service;
-      const existing = serviceMetrics.get(key) || { requests: 0, errors: 0, latencies: [] };
-      existing.requests++;
-      if (call.status === 'error') existing.errors++;
-      existing.latencies.push(call.timing.duration);
-      serviceMetrics.set(key, existing);
+    meshes.forEach((m) => {
+      byType[m.type] = (byType[m.type] || 0) + 1;
+      byStatus[m.status] = (byStatus[m.status] || 0) + 1;
     });
 
     return {
-      period,
       overview: {
-        totalServices: services.length,
-        healthyServices,
-        totalInstances: this.instances.size,
-        healthyInstances,
-        totalRequests: calls.length,
-        errorRate: calls.length > 0 ? (errorCount / calls.length) * 100 : 0,
-        avgLatency: calls.length > 0 ? totalLatency / calls.length : 0,
+        totalMeshes: meshes.length,
+        activeMeshes: meshes.filter((m) => m.status === 'active').length,
+        totalServices: meshes.reduce((sum, m) => sum + m.services.length, 0),
+        totalWorkloads: meshes.reduce((sum, m) => sum + m.services.reduce((s, svc) => s + svc.workloads.length, 0), 0),
+        totalProxies: meshes.reduce((sum, m) => sum + m.dataPlane.totalProxies, 0),
       },
-      services: Array.from(serviceMetrics.entries()).map(([service, metrics]) => {
-        const sorted = metrics.latencies.sort((a, b) => a - b);
-        return {
-          service,
-          requestCount: metrics.requests,
-          errorCount: metrics.errors,
-          errorRate: (metrics.errors / metrics.requests) * 100,
-          latencyP50: sorted[Math.floor(sorted.length * 0.5)] || 0,
-          latencyP95: sorted[Math.floor(sorted.length * 0.95)] || 0,
-          latencyP99: sorted[Math.floor(sorted.length * 0.99)] || 0,
-        };
-      }),
-      traffic: [],
-      topEndpoints: [],
+      byType,
+      byStatus,
+      traffic: {
+        totalRequests: meshes.reduce((sum, m) => sum + m.services.reduce((s, svc) => s + svc.metrics.requestsTotal, 0), 0),
+        requestsPerSecond: meshes.reduce((sum, m) => sum + m.metrics.traffic.requestsPerSecond, 0),
+        avgSuccessRate: meshes.reduce((sum, m) => sum + m.metrics.traffic.successRate, 0) / meshes.length,
+        avgErrorRate: meshes.reduce((sum, m) => sum + m.metrics.traffic.errorRate, 0) / meshes.length,
+      },
+      performance: {
+        avgLatencyP50: meshes.reduce((sum, m) => sum + m.services.reduce((s, svc) => s + svc.metrics.latencyP50, 0) / m.services.length, 0) / meshes.length,
+        avgLatencyP90: meshes.reduce((sum, m) => sum + m.services.reduce((s, svc) => s + svc.metrics.latencyP90, 0) / m.services.length, 0) / meshes.length,
+        avgLatencyP99: meshes.reduce((sum, m) => sum + m.services.reduce((s, svc) => s + svc.metrics.latencyP99, 0) / m.services.length, 0) / meshes.length,
+      },
+      security: {
+        mtlsStrictCount: meshes.filter((m) => m.security.mtls.mode === 'strict').length,
+        mtlsPermissiveCount: meshes.filter((m) => m.security.mtls.mode === 'permissive').length,
+        mtlsDisabledCount: meshes.filter((m) => m.security.mtls.mode === 'disabled').length,
+      },
+      trends: [],
     };
   }
 
-  /**
-   * Subscribe to events
-   */
+  // Event Handling
   public subscribe(callback: (event: string, data: unknown) => void): () => void {
-    this.listeners.push(callback);
+    this.eventListeners.push(callback);
     return () => {
-      const index = this.listeners.indexOf(callback);
-      if (index > -1) this.listeners.splice(index, 1);
+      const index = this.eventListeners.indexOf(callback);
+      if (index > -1) this.eventListeners.splice(index, 1);
     };
   }
 
-  /**
-   * Emit event
-   */
   private emit(event: string, data: unknown): void {
-    this.listeners.forEach((callback) => callback(event, data));
+    this.eventListeners.forEach((callback) => callback(event, data));
   }
 }
 
 export const serviceMeshService = ServiceMeshService.getInstance();
 export type {
-  ServiceStatus,
-  LoadBalancingAlgorithm,
-  ProtocolType,
-  CircuitState,
-  ServiceInstance,
-  ServiceDefinition,
+  MeshType,
+  MeshStatus,
+  SidecarStatus,
+  TrafficPolicyType,
+  MTLSMode,
+  ServiceMesh,
+  MeshConfiguration,
+  NamespaceConfig,
+  ProxyConfiguration,
+  TracingConfiguration,
+  ControlPlane,
+  ControlPlaneComponent,
+  DataPlane,
+  SidecarProxy,
+  ProxyMetrics,
+  MeshService,
+  ServicePort,
   ServiceEndpoint,
-  CircuitBreakerConfig,
-  RateLimitConfig,
-  TrafficRule,
-  MeshGateway,
-  GatewayRoute,
-  ServiceCall,
-  CircuitBreakerStatus,
+  Workload,
+  VirtualService,
+  HTTPRoute,
+  HTTPMatch,
+  StringMatch,
+  RouteDestination,
+  HTTPRedirect,
+  HTTPRewrite,
+  RetryPolicy,
+  FaultInjection,
+  MirrorPolicy,
+  HeaderManipulation,
+  TCPRoute,
+  TLSRoute,
+  DestinationRule,
+  TrafficPolicyConfig,
+  ConnectionPool,
+  LoadBalancerSettings,
+  OutlierDetection,
+  TLSSettings,
+  PortTrafficPolicy,
+  Subset,
+  ServiceEntry,
+  MeshPolicy,
+  PolicyTarget,
+  PolicyConfiguration,
+  Gateway,
+  GatewayServer,
+  GatewayTLS,
+  GatewayMetrics,
+  MeshSecurity,
+  PeerAuthentication,
+  RequestAuthentication,
+  JWTRule,
+  AuthorizationPolicy,
+  AuthorizationRule,
+  MeshObservability,
+  TrafficManagement,
+  EnvoyFilter,
+  ConfigPatch,
+  SidecarConfig,
+  ServiceMeshMetrics,
   MeshMetrics,
-  ServiceDependency,
+  MeshStatistics,
 };
