@@ -6,7 +6,6 @@
 
 const OPENWEATHER_API_KEY = '5e3cfb0419404781b05200642252312';
 const OPENWEATHER_FORECAST_URL = 'https://api.openweathermap.org/data/2.5/forecast';
-const OPENWEATHER_ONECALL_URL = 'https://api.openweathermap.org/data/2.5/onecall';
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
 
 export interface EnhancedForecastDay {

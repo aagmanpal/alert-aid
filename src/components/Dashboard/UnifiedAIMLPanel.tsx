@@ -789,7 +789,7 @@ const UnifiedAIMLPanel: React.FC<UnifiedAIMLPanelProps> = ({
       console.log('🤖 Running Unified AI/ML Analysis for', cityName || `${latitude}, ${longitude}`);
 
       // Fetch all data in parallel
-      const [aggregatedData, hazardPredictions, mlPrediction, anomalyResult, modelStatus] = await Promise.all([
+      const [aggregatedData, , mlPrediction, anomalyResult, modelStatus] = await Promise.all([
         DisasterDataService.getAggregatedData(latitude, longitude),
         LocationHazardService.getHazardPredictions(cityName, latitude, longitude),
         advancedMLApi.getEnsemblePredictionGet(latitude, longitude, '', '').catch(() => null),

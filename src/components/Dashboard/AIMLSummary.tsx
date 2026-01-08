@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { Brain, Cpu, Zap, TrendingUp, AlertTriangle, Activity, BarChart3, Target } from 'lucide-react';
+import { Brain, Cpu, Zap, AlertTriangle, Activity, BarChart3, Target } from 'lucide-react';
 import { Card, Text, Flex } from '../../styles/components';
 
 // =====================================================

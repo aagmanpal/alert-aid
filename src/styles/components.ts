@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 // Helper to filter out custom props from DOM
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const shouldForwardProp = (prop: string) => {
   const customProps = [
     'level', 'weight', 'color', 'size', 'direction', 'align', 'justify', 'gap', 'wrap',

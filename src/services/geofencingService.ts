@@ -350,445 +350,238 @@ class GeofencingService {
   }
 
   /**
-   * Initialize sample data
+   * Initialize predefined danger zones
    */
-  private initializeSampleData(): void {
-    // Sample zones in India (Mumbai area)
-    const sampleZones: Omit<GeofenceZone, 'id' | 'createdAt' | 'updatedAt'>[] = [
-      {
-        name: 'Mumbai Coastal Flood Zone',
-        description: 'High-risk coastal flooding area during monsoon',
-        type: 'danger',
-        status: 'active',
-        priority: 1,
-        shape: {
-          type: 'polygon',
-          coordinates: [
-            { latitude: 19.0760, longitude: 72.8777 },
-            { latitude: 19.0860, longitude: 72.8877 },
-            { latitude: 19.0860, longitude: 72.8677 },
-            { latitude: 19.0760, longitude: 72.8677 },
-          ],
-        },
-        boundingBox: { north: 19.0860, south: 19.0760, east: 72.8877, west: 72.8677 },
-        triggers: [
-          {
-            id: 'trig-1',
-            type: 'enter',
-            actions: [{ type: 'notification', config: { title: 'Entering Flood Zone', body: 'You are entering a high-risk flood area' } }],
-            enabled: true,
-          },
-        ],
-        alertConfig: {
-          sendPush: true,
-          sendSms: true,
-          sendEmail: false,
-          sendVoice: false,
-          urgencyLevel: 'high',
-        },
+  private initializePredefinedZones(): void {
+    PREDEFINED_DANGER_ZONES.forEach((zone, index) => {
+      const geofence: Geofence = {
+        id: `predefined-${index + 1}`,
+        name: zone.name!,
+        type: zone.type!,
+        geometry: zone.geometry!,
+        alertLevel: zone.alertLevel!,
+        triggerOnEnter: true,
+        triggerOnExit: true,
+        triggerOnDwell: false,
+        active: true,
         metadata: {
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          country: 'India',
-          custom: {},
+          lastUpdated: new Date(),
         },
-        permissions: [],
-        childZoneIds: [],
-        tags: ['flood', 'monsoon', 'coastal'],
-        createdBy: 'admin-1',
-      },
-      {
-        name: 'BKC Evacuation Assembly Point',
-        description: 'Primary evacuation assembly point for BKC area',
-        type: 'evacuation',
-        status: 'active',
-        priority: 2,
-        shape: {
-          type: 'circle',
-          center: { latitude: 19.0596, longitude: 72.8656 },
-          radius: 200,
-        },
-        boundingBox: { north: 19.0616, south: 19.0576, east: 72.8676, west: 72.8636 },
-        triggers: [
-          {
-            id: 'trig-2',
-            type: 'enter',
-            actions: [{ type: 'notification', config: { title: 'Evacuation Point', body: 'You have reached the evacuation assembly point' } }],
-            enabled: true,
-          },
-        ],
-        alertConfig: {
-          sendPush: true,
-          sendSms: false,
-          sendEmail: false,
-          sendVoice: false,
-          urgencyLevel: 'medium',
-        },
-        capacity: { maxOccupancy: 5000, currentOccupancy: 0, alertThreshold: 80, overcrowdingAlert: true },
-        metadata: {
-          address: 'MMRDA Ground, BKC',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          country: 'India',
-          facilities: ['water', 'first_aid', 'toilets', 'shade'],
-          custom: {},
-        },
-        permissions: [],
-        childZoneIds: [],
-        tags: ['evacuation', 'assembly', 'safe'],
-        createdBy: 'admin-1',
-      },
-      {
-        name: 'Lilavati Hospital Safe Zone',
-        description: 'Hospital area with emergency services',
-        type: 'hospital',
-        status: 'active',
-        priority: 2,
-        shape: {
-          type: 'circle',
-          center: { latitude: 19.0509, longitude: 72.8294 },
-          radius: 300,
-        },
-        boundingBox: { north: 19.0539, south: 19.0479, east: 72.8324, west: 72.8264 },
-        triggers: [],
-        alertConfig: {
-          sendPush: true,
-          sendSms: false,
-          sendEmail: false,
-          sendVoice: false,
-          urgencyLevel: 'low',
-        },
-        metadata: {
-          address: 'A-791, Bandra Reclamation',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          contactPhone: '+91-22-26751000',
-          facilities: ['emergency', 'trauma', 'icu', 'pharmacy'],
-          custom: {},
-        },
-        permissions: [],
-        childZoneIds: [],
-        tags: ['hospital', 'emergency', 'medical'],
-        createdBy: 'admin-1',
-      },
-      {
-        name: 'Relief Distribution Center - Dharavi',
-        description: 'Relief material distribution point',
-        type: 'distribution',
-        status: 'active',
-        priority: 3,
-        shape: {
-          type: 'circle',
-          center: { latitude: 19.0430, longitude: 72.8550 },
-          radius: 150,
-        },
-        boundingBox: { north: 19.0445, south: 19.0415, east: 72.8565, west: 72.8535 },
-        triggers: [
-          {
-            id: 'trig-3',
-            type: 'dwell',
-            dwellTime: 300,
-            actions: [{ type: 'log', config: { category: 'distribution_visit' } }],
-            enabled: true,
-          },
-        ],
-        alertConfig: {
-          sendPush: false,
-          sendSms: false,
-          sendEmail: false,
-          sendVoice: false,
-          urgencyLevel: 'low',
-        },
-        schedule: {
-          type: 'scheduled',
-          startTime: new Date(),
-          endTime: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          timezone: 'Asia/Kolkata',
-        },
-        metadata: {
-          address: 'Community Hall, Dharavi',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          operatingHours: '08:00 - 18:00',
-          custom: {},
-        },
-        permissions: [],
-        childZoneIds: [],
-        tags: ['distribution', 'relief', 'supplies'],
-        createdBy: 'admin-1',
-      },
-      {
-        name: 'Powai Lake Monitoring Zone',
-        description: 'Lake water level monitoring area',
-        type: 'monitoring',
-        status: 'active',
-        priority: 3,
-        shape: {
-          type: 'polygon',
-          coordinates: [
-            { latitude: 19.1280, longitude: 72.9050 },
-            { latitude: 19.1280, longitude: 72.9150 },
-            { latitude: 19.1180, longitude: 72.9150 },
-            { latitude: 19.1180, longitude: 72.9050 },
-          ],
-        },
-        boundingBox: { north: 19.1280, south: 19.1180, east: 72.9150, west: 72.9050 },
-        triggers: [],
-        alertConfig: {
-          sendPush: false,
-          sendSms: false,
-          sendEmail: true,
-          sendVoice: false,
-          urgencyLevel: 'medium',
-        },
-        metadata: {
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          custom: { waterLevel: 'normal', lastInspection: new Date().toISOString() },
-        },
-        permissions: [],
-        childZoneIds: [],
-        tags: ['monitoring', 'water', 'lake'],
-        createdBy: 'admin-1',
-      },
-    ];
-
-    sampleZones.forEach((zone, index) => {
-      const id = `zone-${(index + 1).toString().padStart(6, '0')}`;
-      this.zones.set(id, {
-        ...zone,
-        id,
-        createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(),
-      });
-    });
-
-    // Create sample POIs
-    const samplePOIs: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>[] = [
-      {
-        name: 'KEM Hospital',
-        description: 'Government hospital with emergency services',
-        category: 'hospital',
-        coordinate: { latitude: 19.0002, longitude: 72.8412 },
-        address: 'Acharya Donde Marg, Parel',
-        phone: '+91-22-24136051',
-        status: 'operational',
-        services: ['emergency', 'trauma', 'surgery', 'icu'],
-        accessibility: ['wheelchair', 'elevator'],
-        capacity: 2000,
-        metadata: {},
-      },
-      {
-        name: 'Juhu Beach Evacuation Point',
-        description: 'Beach evacuation assembly area',
-        category: 'evacuation_point',
-        coordinate: { latitude: 19.0883, longitude: 72.8266 },
-        address: 'Juhu Beach, Juhu',
-        status: 'operational',
-        services: ['first_aid', 'water', 'shelter'],
-        capacity: 10000,
-        metadata: {},
-      },
-      {
-        name: 'Colaba Fire Station',
-        description: 'Mumbai Fire Brigade station',
-        category: 'fire_station',
-        coordinate: { latitude: 18.9217, longitude: 72.8318 },
-        address: 'Colaba Causeway',
-        phone: '101',
-        status: 'operational',
-        services: ['fire_rescue', 'flood_rescue', 'emergency'],
-        metadata: {},
-      },
-    ];
-
-    samplePOIs.forEach((poi, index) => {
-      const id = `poi-${(index + 1).toString().padStart(6, '0')}`;
-      this.pois.set(id, {
-        ...poi,
-        id,
-        createdAt: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(),
-      });
-    });
-
-    // Create sample device locations
-    for (let i = 1; i <= 50; i++) {
-      const location: DeviceLocation = {
-        deviceId: `device-${i.toString().padStart(6, '0')}`,
-        userId: `user-${i}`,
-        coordinate: {
-          latitude: 19.0 + Math.random() * 0.2,
-          longitude: 72.8 + Math.random() * 0.2,
-        },
-        accuracy: Math.floor(Math.random() * 50) + 5,
-        speed: Math.random() * 10,
-        heading: Math.floor(Math.random() * 360),
-        battery: Math.floor(Math.random() * 100),
-        timestamp: new Date(Date.now() - Math.random() * 60 * 60 * 1000),
-        source: 'gps',
-        isMoving: Math.random() > 0.5,
-        currentZones: [],
       };
-
-      // Determine which zones the device is in
-      this.zones.forEach((zone, zoneId) => {
-        if (this.isPointInZone(location.coordinate, zone)) {
-          location.currentZones.push(zoneId);
-        }
-      });
-
-      this.deviceLocations.set(location.deviceId, location);
-    }
-
-    // Create sample events
-    const eventTypes: TriggerType[] = ['enter', 'exit', 'dwell'];
-    for (let i = 0; i < 500; i++) {
-      const zoneKeys = Array.from(this.zones.keys());
-      const zoneId = zoneKeys[i % zoneKeys.length];
-      const zone = this.zones.get(zoneId)!;
-
-      const event: GeofenceEvent = {
-        id: `evt-${i.toString().padStart(8, '0')}`,
-        type: eventTypes[i % eventTypes.length],
-        zoneId,
-        zoneName: zone.name,
-        zoneType: zone.type,
-        deviceId: `device-${((i % 50) + 1).toString().padStart(6, '0')}`,
-        userId: `user-${(i % 50) + 1}`,
-        triggerId: zone.triggers[0]?.id || 'auto',
-        coordinate: {
-          latitude: (zone.shape.center?.latitude || zone.boundingBox.north) + (Math.random() - 0.5) * 0.01,
-          longitude: (zone.shape.center?.longitude || zone.boundingBox.east) + (Math.random() - 0.5) * 0.01,
-        },
-        accuracy: Math.floor(Math.random() * 30) + 5,
-        speed: Math.random() * 5,
-        dwellDuration: eventTypes[i % eventTypes.length] === 'dwell' ? Math.floor(Math.random() * 600) + 60 : undefined,
-        timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-        processed: true,
-        actionsExecuted: [],
-      };
-
-      this.events.push(event);
-    }
-
-    // Create sample proximity alerts
-    for (let i = 0; i < 10; i++) {
-      const alert: ProximityAlert = {
-        id: `prox-${i.toString().padStart(6, '0')}`,
-        name: `Proximity Alert ${i + 1}`,
-        description: `Alert when devices come within range`,
-        sourceType: 'zone',
-        sourceId: `zone-${((i % 5) + 1).toString().padStart(6, '0')}`,
-        targetType: 'device',
-        targetIds: [`device-${((i * 5) % 50 + 1).toString().padStart(6, '0')}`],
-        distance: (i + 1) * 100,
-        triggerOn: 'entering',
-        alertConfig: {
-          sendPush: true,
-          sendSms: false,
-          sendEmail: false,
-          sendVoice: false,
-          urgencyLevel: 'medium',
-        },
-        enabled: true,
-        triggerCount: Math.floor(Math.random() * 20),
-        createdBy: `admin-1`,
-        createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(),
-      };
-
-      this.proximityAlerts.set(alert.id, alert);
-    }
-
-    // Create sample routes
-    const sampleRoutes: Omit<Route, 'id' | 'createdAt' | 'updatedAt'>[] = [
-      {
-        name: 'BKC to Juhu Evacuation Route',
-        description: 'Primary evacuation route from BKC to Juhu',
-        type: 'evacuation',
-        waypoints: [
-          { latitude: 19.0596, longitude: 72.8656 },
-          { latitude: 19.0700, longitude: 72.8500 },
-          { latitude: 19.0883, longitude: 72.8266 },
-        ],
-        distance: 8500,
-        estimatedDuration: 1800,
-        status: 'active',
-        zones: ['zone-000002'],
-      },
-      {
-        name: 'Dharavi Relief Supply Route',
-        description: 'Supply delivery route to Dharavi distribution center',
-        type: 'supply',
-        waypoints: [
-          { latitude: 19.0176, longitude: 72.8562 },
-          { latitude: 19.0300, longitude: 72.8550 },
-          { latitude: 19.0430, longitude: 72.8550 },
-        ],
-        distance: 3200,
-        estimatedDuration: 900,
-        status: 'active',
-        zones: ['zone-000004'],
-      },
-    ];
-
-    sampleRoutes.forEach((route, index) => {
-      const id = `route-${(index + 1).toString().padStart(6, '0')}`;
-      this.routes.set(id, {
-        ...route,
-        id,
-        createdAt: new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(),
-      });
+      this.geofences.set(geofence.id, geofence);
     });
   }
 
   /**
-   * Check if point is in zone
+   * Create a new geofence
    */
-  private isPointInZone(point: Coordinate, zone: GeofenceZone): boolean {
-    if (zone.shape.type === 'circle' && zone.shape.center && zone.shape.radius) {
-      const distance = this.calculateDistance(point, zone.shape.center);
-      return distance <= zone.shape.radius;
+  public createGeofence(geofence: Omit<Geofence, 'id'>): Geofence {
+    const id = `geofence-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const newGeofence: Geofence = {
+      ...geofence,
+      id,
+      metadata: {
+        ...geofence.metadata,
+        lastUpdated: new Date(),
+      },
+    };
+    
+    this.geofences.set(id, newGeofence);
+    
+    // Check if user is already inside
+    if (this.lastLocation && newGeofence.active) {
+      this.checkGeofence(newGeofence, this.lastLocation);
+    }
+    
+    this.notifyStatusChange();
+    return newGeofence;
+  }
+
+  /**
+   * Update existing geofence
+   */
+  public updateGeofence(id: string, updates: Partial<Geofence>): Geofence | null {
+    const existing = this.geofences.get(id);
+    if (!existing) return null;
+
+    const updated: Geofence = {
+      ...existing,
+      ...updates,
+      id,
+      metadata: {
+        ...existing.metadata,
+        ...updates.metadata,
+        lastUpdated: new Date(),
+      },
+    };
+
+    this.geofences.set(id, updated);
+    this.notifyStatusChange();
+    return updated;
+  }
+
+  /**
+   * Delete geofence
+   */
+  public deleteGeofence(id: string): boolean {
+    const deleted = this.geofences.delete(id);
+    if (deleted) {
+      this.activeGeofences.delete(id);
+      this.clearDwellTimer(id);
+      this.notifyStatusChange();
+    }
+    return deleted;
+  }
+
+  /**
+   * Start monitoring geofences
+   */
+  public startMonitoring(): boolean {
+    if (this.watchId !== null) return true;
+
+    if (!navigator.geolocation) {
+      console.error('Geolocation not supported');
+      return false;
     }
 
-    if ((zone.shape.type === 'polygon' || zone.shape.type === 'rectangle') && zone.shape.coordinates) {
-      return this.isPointInPolygon(point, zone.shape.coordinates);
+    this.watchId = navigator.geolocation.watchPosition(
+      (position) => this.handleLocationUpdate(position),
+      (error) => this.handleLocationError(error),
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 5000,
+      }
+    );
+
+    this.notifyStatusChange();
+    return true;
+  }
+
+  /**
+   * Stop monitoring
+   */
+  public stopMonitoring(): void {
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
     }
 
-    return false;
+    // Clear all dwell timers
+    this.dwellTimers.forEach((timer) => clearTimeout(timer));
+    this.dwellTimers.clear();
+
+    this.notifyStatusChange();
   }
 
   /**
-   * Calculate distance between two points (Haversine formula)
+   * Handle location update
    */
-  private calculateDistance(point1: Coordinate, point2: Coordinate): number {
-    const R = 6371000; // Earth's radius in meters
-    const dLat = this.toRadians(point2.latitude - point1.latitude);
-    const dLon = this.toRadians(point2.longitude - point1.longitude);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.toRadians(point1.latitude)) *
-        Math.cos(this.toRadians(point2.latitude)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+  private handleLocationUpdate(position: GeolocationPosition): void {
+    const location: TrackedLocation = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      timestamp: new Date(position.timestamp),
+      speed: position.coords.speed ?? undefined,
+      heading: position.coords.heading ?? undefined,
+    };
+
+    this.lastLocation = location;
+
+    // Check all active geofences
+    this.geofences.forEach((geofence) => {
+      if (geofence.active && this.isGeofenceValid(geofence)) {
+        this.checkGeofence(geofence, location);
+      }
+    });
+
+    this.notifyStatusChange();
   }
 
   /**
-   * Convert degrees to radians
+   * Handle location error
    */
-  private toRadians(degrees: number): number {
-    return degrees * (Math.PI / 180);
+  private handleLocationError(error: GeolocationPositionError): void {
+    console.error('Location error:', error.message);
   }
 
   /**
-   * Check if point is in polygon (Ray casting algorithm)
+   * Check if geofence is valid (within time bounds)
    */
-  private isPointInPolygon(point: Coordinate, polygon: Coordinate[]): boolean {
+  private isGeofenceValid(geofence: Geofence): boolean {
+    const now = new Date();
+    if (geofence.validFrom && now < geofence.validFrom) return false;
+    if (geofence.validUntil && now > geofence.validUntil) return false;
+    return true;
+  }
+
+  /**
+   * Check single geofence against location
+   */
+  private checkGeofence(geofence: Geofence, location: TrackedLocation): void {
+    const isInside = this.isInsideGeofence(geofence, location);
+    const wasInside = this.activeGeofences.has(geofence.id);
+
+    if (isInside && !wasInside) {
+      // Entered geofence
+      this.activeGeofences.add(geofence.id);
+      
+      if (geofence.triggerOnEnter) {
+        this.triggerEvent(geofence, 'enter', location);
+      }
+      
+      if (geofence.triggerOnDwell && geofence.dwellTime) {
+        this.startDwellTimer(geofence, location);
+      }
+    } else if (!isInside && wasInside) {
+      // Exited geofence
+      this.activeGeofences.delete(geofence.id);
+      this.clearDwellTimer(geofence.id);
+      
+      if (geofence.triggerOnExit) {
+        this.triggerEvent(geofence, 'exit', location);
+      }
+    }
+  }
+
+  /**
+   * Check if location is inside geofence
+   */
+  private isInsideGeofence(geofence: Geofence, location: TrackedLocation): boolean {
+    switch (geofence.geometry.type) {
+      case 'circle':
+        return this.isInsideCircle(geofence.geometry, location);
+      case 'polygon':
+        return this.isInsidePolygon(geofence.geometry, location);
+      case 'corridor':
+        return this.isInsideCorridor(geofence.geometry, location);
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Check if inside circle geofence
+   */
+  private isInsideCircle(geometry: CircleGeometry, location: TrackedLocation): boolean {
+    const distance = this.calculateDistance(
+      location.latitude,
+      location.longitude,
+      geometry.center.latitude,
+      geometry.center.longitude
+    );
+    return distance <= geometry.radius;
+  }
+
+  /**
+   * Check if inside polygon geofence (Ray casting algorithm)
+   */
+  private isInsidePolygon(geometry: PolygonGeometry, location: TrackedLocation): boolean {
+    const { latitude: y, longitude: x } = location;
+    const polygon = geometry.coordinates;
     let inside = false;
+
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
       const xi = polygon[i].longitude;
       const yi = polygon[i].latitude;

@@ -507,7 +507,7 @@ export function getTimeToAlert(
   return `${dangerPrediction.hour} hours`;
 }
 
-export default {
+const indiaFloodApi = {
   getIndiaRivers,
   getRiverPrediction,
   getCustomPrediction,
@@ -522,3 +522,5 @@ export default {
   formatProbability,
   getTimeToAlert,
 };
+
+export default indiaFloodApi;

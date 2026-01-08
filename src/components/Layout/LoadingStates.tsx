@@ -1,5 +1,14 @@
 import React from 'react';
 import styled, { keyframes, css } from 'styled-components';
+import { 
+  SkeletonDashboardCard, 
+  SkeletonAlertCard, 
+  SkeletonMap, 
+  SkeletonList,
+  SkeletonChart as OriginalSkeletonChart,
+  SkeletonText as OriginalSkeletonText,
+  SkeletonCard as OriginalSkeletonCard
+} from '../../styles/SkeletonLoader';
 
 // Enhanced Skeleton Loading Animations
 const shimmer = keyframes`
@@ -44,7 +53,18 @@ const SkeletonBase = styled.div<{ width?: string; height?: string; borderRadius?
   height: ${({ height }) => height || '1rem'};
 `;
 
-export const SkeletonText = styled(SkeletonBase)`
+
+
+
+
+
+
+export const SkeletonButton = styled(SkeletonBase)`
+  height: 2.5rem;
+  width: 8rem;
+`;
+
+export const SkeletonText = styled(OriginalSkeletonText)`
   height: 1rem;
   margin-bottom: 0.5rem;
   
@@ -54,20 +74,15 @@ export const SkeletonText = styled(SkeletonBase)`
   }
 `;
 
-export const SkeletonCard = styled(SkeletonBase)`
+export const SkeletonCard = styled(OriginalSkeletonCard)`
   height: 8rem;
   width: 100%;
   margin-bottom: 1rem;
 `;
 
-export const SkeletonChart = styled(SkeletonBase)`
-  height: 12rem;
-  width: 100%;
-`;
-
-export const SkeletonButton = styled(SkeletonBase)`
-  height: 2.5rem;
-  width: 8rem;
+// Customized skeleton components with specific sizes
+export const CustomSkeletonChart = styled(OriginalSkeletonChart)`
+  height: ${props => props.$height || '12rem'};
 `;
 
 // Pulse Loaders
@@ -200,33 +215,74 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   </OverlayContainer>
 );
 
-// Skeleton Dashboard Layout
+// Skeleton Dashboard Layout - Enhanced
+const DashboardGrid = styled.div`
+  padding: 24px;
+  display: grid;
+  gap: 24px;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: 2fr 1fr;
+  }
+`;
+
+const CardsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+`;
+
 export const SkeletonDashboard: React.FC = () => (
-  <div style={{ padding: '1.5rem', display: 'grid', gap: '1.5rem' }}>
+  <div style={{ padding: '24px' }}>
     {/* Header skeleton */}
-    <div>
-      <SkeletonText width="60%" height="2rem" />
-      <SkeletonText width="40%" />
+    <div style={{ marginBottom: '32px' }}>
+      <SkeletonText $width="40%" $height="36px" />
+      <SkeletonText $width="60%" $height="16px" />
     </div>
     
     {/* Cards skeleton */}
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-      <SkeletonCard />
-      <SkeletonCard />
-      <SkeletonCard />
-    </div>
+    <CardsGrid>
+      <SkeletonDashboardCard />
+      <SkeletonDashboardCard />
+      <SkeletonDashboardCard />
+    </CardsGrid>
     
-    {/* Chart skeleton */}
-    <SkeletonChart />
-    
-    {/* List skeleton */}
-    <div>
-      <SkeletonText width="30%" height="1.5rem" />
-      <div style={{ marginTop: '1rem' }}>
-        <SkeletonText />
-        <SkeletonText />
-        <SkeletonText width="80%" />
+    {/* Main content grid */}
+    <DashboardGrid>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <OriginalSkeletonChart $height="400px" />
+        <SkeletonMap height="300px" />
       </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <SkeletonList items={5} />
+      </div>
+    </DashboardGrid>
+  </div>
+);
+
+// Skeleton Alerts Page
+export const SkeletonAlertsPage: React.FC = () => (
+  <div style={{ padding: '24px' }}>
+    <div style={{ marginBottom: '24px' }}>
+      <OriginalSkeletonText $width="30%" $height="32px" />
+      <OriginalSkeletonText $width="50%" $height="16px" />
+    </div>
+    <SkeletonList items={6} />
+  </div>
+);
+
+// Skeleton Map Page
+export const SkeletonMapPage: React.FC = () => (
+  <div style={{ padding: '24px' }}>
+    <div style={{ marginBottom: '16px' }}>
+      <OriginalSkeletonText $width="40%" $height="32px" />
+    </div>
+    <SkeletonMap height="600px" />
+    <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+      <OriginalSkeletonCard $height="120px" />
+      <OriginalSkeletonCard $height="120px" />
+      <OriginalSkeletonCard $height="120px" />
     </div>
   </div>
 );
@@ -234,7 +290,7 @@ export const SkeletonDashboard: React.FC = () => (
 const LoadingStatesComponents = {
   SkeletonText,
   SkeletonCard,
-  SkeletonChart,
+  SkeletonChart: CustomSkeletonChart,
   SkeletonButton,
   PulseLoader,
   WaveLoader,

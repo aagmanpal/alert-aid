@@ -43,52 +43,53 @@ const StatusTitle = styled.h3`
   gap: 8px;
 `;
 
-const StatusBadge = styled.div<{ status: 'healthy' | 'degraded' | 'critical' }>`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 14px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: ${props => {
-    switch (props.status) {
-      case 'healthy': return 'linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05))';
-      case 'degraded': return 'linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.05))';
-      case 'critical': return 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05))';
-      default: return 'linear-gradient(135deg, rgba(107, 114, 128, 0.15), rgba(107, 114, 128, 0.05))';
-    }
-  }};
-  color: ${props => {
-    switch (props.status) {
-      case 'healthy': return '#22C55E';
-      case 'degraded': return '#FBBF24';
-      case 'critical': return '#EF4444';
-      default: return '#9CA3AF';
-    }
-  }};
-  border: 1px solid ${props => {
-    switch (props.status) {
-      case 'healthy': return 'rgba(34, 197, 94, 0.3)';
-      case 'degraded': return 'rgba(251, 191, 36, 0.3)';
-      case 'critical': return 'rgba(239, 68, 68, 0.3)';
-      default: return 'rgba(107, 114, 128, 0.2)';
-    }
-  }};
-  box-shadow: 0 2px 8px ${props => {
-    switch (props.status) {
-      case 'healthy': return 'rgba(34, 197, 94, 0.2)';
-      case 'degraded': return 'rgba(251, 191, 36, 0.2)';
-      case 'critical': return 'rgba(239, 68, 68, 0.2)';
-      default: return 'transparent';
-    }
-  }};
-  transition: all ${productionAnimations.duration.normal} ${productionAnimations.easing.smooth};
-  
-  &:hover {
-    transform: scale(1.05);
-  }
-`;
+// StatusBadge currently unused - replaced by SystemStatusBadge
+// const StatusBadge = styled.div<{ status: 'healthy' | 'degraded' | 'critical' }>`
+//   display: flex;
+//   align-items: center;
+//   gap: 6px;
+//   padding: 6px 14px;
+//   border-radius: 14px;
+//   font-size: 0.75rem;
+//   font-weight: 600;
+//   background: ${props => {
+//     switch (props.status) {
+//       case 'healthy': return 'linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05))';
+//       case 'degraded': return 'linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.05))';
+//       case 'critical': return 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05))';
+//       default: return 'linear-gradient(135deg, rgba(107, 114, 128, 0.15), rgba(107, 114, 128, 0.05))';
+//     }
+//   }};
+//   color: ${props => {
+//     switch (props.status) {
+//       case 'healthy': return '#22C55E';
+//       case 'degraded': return '#FBBF24';
+//       case 'critical': return '#EF4444';
+//       default: return '#9CA3AF';
+//     }
+//   }};
+//   border: 1px solid ${props => {
+//     switch (props.status) {
+//       case 'healthy': return 'rgba(34, 197, 94, 0.3)';
+//       case 'degraded': return 'rgba(251, 191, 36, 0.3)';
+//       case 'critical': return 'rgba(239, 68, 68, 0.3)';
+//       default: return 'rgba(107, 114, 128, 0.2)';
+//     }
+//   }};
+//   box-shadow: 0 2px 8px ${props => {
+//     switch (props.status) {
+//       case 'healthy': return 'rgba(34, 197, 94, 0.2)';
+//       case 'degraded': return 'rgba(251, 191, 36, 0.2)';
+//       case 'critical': return 'rgba(239, 68, 68, 0.2)';
+//       default: return 'transparent';
+//     }
+//   }};
+//   transition: all ${productionAnimations.duration.normal} ${productionAnimations.easing.smooth};
+//   
+//   &:hover {
+//     transform: scale(1.05);
+//   }
+// `;
 
 const ServicesGrid = styled.div`
   display: grid;

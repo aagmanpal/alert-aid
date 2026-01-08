@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Card, Button } from '../../styles/components';
 import { useGeolocation } from '../Location/GeolocationManager';

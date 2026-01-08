@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Area, ComposedChart, Line } from 'recharts';
+import { Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Area, ComposedChart, Line } from 'recharts';
 import { Calendar, TrendingUp, TrendingDown, Wind, Thermometer, AlertTriangle, Wifi, WifiOff, Sun, Cloud, CloudSun, CloudLightning, Droplets, CloudRain } from 'lucide-react';
 import { Card, Heading, Text, Flex } from '../../styles/components';
 import { ForecastData } from '../../types';
@@ -287,24 +287,25 @@ const CustomTooltipContainer = styled.div`
   }
 `;
 
-const LoadingState = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  gap: 16px;
-  padding: 40px;
-  
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(99, 102, 241, 0.2);
-    border-top-color: #6366f1;
-    border-radius: 50%;
-    ${css`animation: ${pulse} 1s ease-in-out infinite;`}
-  }
-`;
+// LoadingState currently unused - kept for future loading UI
+// const LoadingState = styled.div`
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   justify-content: center;
+//   flex: 1;
+//   gap: 16px;
+//   padding: 40px;
+//   
+//   .spinner {
+//     width: 40px;
+//     height: 40px;
+//     border: 3px solid rgba(99, 102, 241, 0.2);
+//     border-top-color: #6366f1;
+//     border-radius: 50%;
+//     ${css`animation: ${pulse} 1s ease-in-out infinite;`}
+//   }
+// `;
 
 // =====================================================
 // INTERFACES
